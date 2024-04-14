@@ -1,6 +1,4 @@
-getgenv().Script_Key = '284u568i2272n1136f1136n1988w1136d1420r1704r1704z2556x'
-
-_G.script_key = getgenv().Script_Key
+_G.script_key = getgenv().Script_Key or getgenv().Ascend.Script_Key
 local EncryptWhitelist = loadstring(game:HttpGet('https://raw.githubusercontent.com/dooms-scripts/projects/main/encrypt-whitelist-module'))()
 
 if not EncryptWhitelist.plr_is_whitelisted() then return end
