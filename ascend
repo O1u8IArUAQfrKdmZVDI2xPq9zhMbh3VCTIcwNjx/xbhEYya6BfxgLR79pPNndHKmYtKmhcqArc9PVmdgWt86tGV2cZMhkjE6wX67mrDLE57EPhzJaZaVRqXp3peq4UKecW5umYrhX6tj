@@ -3,25 +3,6 @@ local EncryptWhitelist = loadstring(game:HttpGet('https://raw.githubusercontent.
 
 if not EncryptWhitelist.plr_is_whitelisted() then return end
 
-getgenv().Ascend = {
-    Settings = {
-        Build = 'v1'
-    },
-    Camlock = {
-        Main = {
-            Enabled = false,
-            Keybind = "Q",
-            Prediction = {
-                Enabled = true,
-                Auto = true,
-                Horizontal = 0.132,
-                Vertical = 0.156,
-            },
-            HitPart = "HumanoidRootPart",
-            Range = 250,
-        },
-    },
-}
 if getgenv().ENCRYPT_INSTANCE then
     getgenv().ENCRYPT_INSTANCE:Destroy()
 end
