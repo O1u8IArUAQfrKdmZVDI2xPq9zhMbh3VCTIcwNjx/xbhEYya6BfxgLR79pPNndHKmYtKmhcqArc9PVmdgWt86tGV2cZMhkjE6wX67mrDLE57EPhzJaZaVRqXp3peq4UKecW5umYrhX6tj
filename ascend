@@ -380,5 +380,5 @@ local AutoPrediction = Categories.LegitCategory1.new_toggle({
 
 AutoPrediction:update_value(getgenv().Ascend.Camlock.Main.Prediction.Auto)
 
-warn("[💎] Ascent loaded!")
+warn("[💎] Ascend loaded!")
 Script.Functions.CreateButton()
