@@ -3,11 +3,11 @@ local EncryptWhitelist = loadstring(game:HttpGet('https://raw.githubusercontent.
 
 if not EncryptWhitelist.plr_is_whitelisted() then return end
 
-if getgenv().Ascend or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
+if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
 if getgenv().ENCRYPT_INSTANCE then
     getgenv().ENCRYPT_INSTANCE:Destroy()
 end
-getgenv().Ascend = not getgenv().Ascend
+getgenv().Loaded = not getgenv().Loaded
 
 --// Script
 local Script = {Functions = {}}
