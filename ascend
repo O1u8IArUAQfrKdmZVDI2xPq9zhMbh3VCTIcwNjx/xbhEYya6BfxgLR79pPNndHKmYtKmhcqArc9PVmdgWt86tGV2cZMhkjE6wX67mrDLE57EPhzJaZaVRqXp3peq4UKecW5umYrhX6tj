@@ -95,7 +95,7 @@ end
 
 --> ScreenGui
 ScreenGui = asd.new("ScreenGui", {
-    Parent = game.Players.LocalPlayer.PlayerGui;
+    Parent = game:GetService("CoreGui") or gethui()
     ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
 })
 
@@ -131,7 +131,7 @@ ImageButton.Activated:Connect(function()
             elseif not Locked then
                 Target = nil
             end
-end)
+			end)
 --end
 end
 
