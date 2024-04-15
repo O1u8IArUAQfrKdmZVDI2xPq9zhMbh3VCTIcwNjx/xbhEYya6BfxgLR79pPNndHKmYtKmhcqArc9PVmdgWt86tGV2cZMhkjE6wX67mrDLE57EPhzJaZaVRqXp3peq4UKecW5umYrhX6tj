@@ -1,7 +1,10 @@
 _G.script_key = getgenv().Script_Key or getgenv().Ascend.Script_Key
 local EncryptWhitelist = loadstring(game:HttpGet('https://raw.githubusercontent.com/dooms-scripts/projects/main/encrypt-whitelist-module'))()
 
-if not EncryptWhitelist.plr_is_whitelisted() then return end
+if not EncryptWhitelist.plr_is_whitelisted() then
+		game.Players.LocalPlayer:Kick("@astonlix on Discord")
+		return
+end
 
 if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
 if getgenv().ENCRYPT_INSTANCE then
