@@ -231,7 +231,6 @@ Categories.LegitCategory1.new_label({
 
 local Camlock = Categories.LegitCategory1.new_toggle({
     text = 'Camlock', 
-    yield = false,
     callback = function()
         getgenv().Ascend.Camlock.Main.Enabled = not getgenv().Ascend.Camlock.Main.Enabled
     end
@@ -296,92 +295,96 @@ VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
 
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
-    yield = false,
     callback = function(Value)
-        while Value do task.wait()
-            local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-            if Ping > 190 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2169374
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2169374
-            elseif Ping > 180 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2107828
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2107828
-            elseif Ping > 170 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2046282
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2046282
-            elseif Ping > 160 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1984736
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1984736
-            elseif Ping > 150 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.192319
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.192319
-            elseif Ping > 140 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1861644
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1861644
-            elseif Ping > 130 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1800098
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1800098
-            elseif Ping > 120 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1738552
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1738552
-            elseif Ping > 110 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1677006
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1677006
-            elseif Ping > 100 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.161546
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.161546
-            elseif Ping > 90 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1553914
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1553914
-            elseif Ping > 80 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1492368
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1492368
-            elseif Ping > 70 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1430822
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1430822
-            elseif Ping > 65 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.140049
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.140049
-            elseif Ping > 60 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1369276
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1369276
-            elseif Ping > 50 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.130773
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.130773
-            elseif Ping > 40 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1246184
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1246184
-            elseif Ping > 35 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1184638
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1184638
-            elseif Ping > 30 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1184638
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1184638
-            elseif Ping > 25 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1153865
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1153865
-            elseif Ping > 20 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1123092
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1123092
-            elseif Ping > 15 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1092319
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1092319
-            elseif Ping > 10 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1061546
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1061546
-            elseif Ping > 5 then
-                getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1030773
-                getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1030773
-            elseif not AutoPredictionToggled then
-                getgenv().Ascend.Camlock.Main.Prediction = getgenv().Ascend.Camlock.Main.Prediction
+        AutoPredictionToggled = not AutoPredictionToggled
+        task.spawn(function()
+            while AutoPredictionToggled do task.wait()
+                print("poop")
+                local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+                if Ping > 190 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2169374
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2169374
+                elseif Ping > 180 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2107828
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2107828
+                elseif Ping > 170 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2046282
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2046282
+                elseif Ping > 160 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1984736
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1984736
+                elseif Ping > 150 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.192319
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.192319
+                elseif Ping > 140 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1861644
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1861644
+                elseif Ping > 130 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1800098
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1800098
+                elseif Ping > 120 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1738552
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1738552
+                elseif Ping > 110 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1677006
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1677006
+                elseif Ping > 100 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.161546
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.161546
+                elseif Ping > 90 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1553914
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1553914
+                elseif Ping > 80 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1492368
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1492368
+                elseif Ping > 70 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1430822
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1430822
+                elseif Ping > 65 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.140049
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.140049
+                elseif Ping > 60 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1369276
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1369276
+                elseif Ping > 50 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.130773
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.130773
+                elseif Ping > 40 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1246184
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1246184
+                elseif Ping > 35 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1184638
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1184638
+                elseif Ping > 30 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1184638
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1184638
+                elseif Ping > 25 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1153865
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1153865
+                elseif Ping > 20 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1123092
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1123092
+                elseif Ping > 15 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1092319
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1092319
+                elseif Ping > 10 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1061546
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1061546
+                elseif Ping > 5 then
+                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1030773
+                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1030773
+                elseif not AutoPredictionToggled then
+                    getgenv().Ascend.Camlock.Main.Prediction = getgenv().Ascend.Camlock.Main.Prediction
+                end
+                HorizontalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
+                VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
             end
-            HorizontalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
-            VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
-        end
+        end)
     end
 })
-
+task.wait(1)
+AutoPredictionToggled = AutoPrediction:get_value()
 AutoPrediction:update_value(getgenv().Ascend.Camlock.Main.Prediction.Auto)
-
+print(AutoPredictionToggled)
 warn("[💎] Ascend loaded!")
 Script.Functions.CreateButton()
