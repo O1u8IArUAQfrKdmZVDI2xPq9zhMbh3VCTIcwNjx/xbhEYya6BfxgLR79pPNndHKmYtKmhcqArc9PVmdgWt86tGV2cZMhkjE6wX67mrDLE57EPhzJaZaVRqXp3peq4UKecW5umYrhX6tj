@@ -25,14 +25,11 @@ local Mobile, PC = UserInputService.TouchEnabled and not UserInputService.Keyboa
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
         if Target ~= nil then
-            Camera.CameraType = Enum.CameraType.Scriptable
             local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
             local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-            Camera.CFrame = CFrame.new(Camera.CFrame.p, TargetPos)
+            Camera.CFrame = CFrame.lookAt(Camera.CFrame.p, TargetPos)
             end
-        else
-            Camera.CameraType = Enum.CameraType.Custom
         end
     end
 )
