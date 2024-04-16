@@ -22,9 +22,9 @@ local Target, Locked, AutoPredictionToggled = nil, false, getgenv().Ascend.Camlo
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
 local Mobile, PC = UserInputService.TouchEnabled, UserInputService.KeyboardEnabled
 
-if Mobile == true then
+--[[if Mobile == true then
     loadstring(game:HttpGet('https://raw.githubusercontent.com/BalligusapoTT/BalligusapoTT/main/Leftclickballi'))()
-end
+end]]
 
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
