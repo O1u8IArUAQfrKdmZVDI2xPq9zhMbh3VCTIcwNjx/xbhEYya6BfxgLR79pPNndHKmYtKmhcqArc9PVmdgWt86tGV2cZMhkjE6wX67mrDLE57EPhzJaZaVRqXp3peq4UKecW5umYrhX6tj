@@ -5,6 +5,7 @@ if not EncryptWhitelist.plr_is_whitelisted() then
 		game.Players.LocalPlayer:Kick("@astonlix on Discord for whitelist")
 		return
 end
+--test
 if getgenv().Ascend.Settings.Build ~= 'v1' then
 		game.Players.LocalPlayer:Kick("Old Version!")
 end
