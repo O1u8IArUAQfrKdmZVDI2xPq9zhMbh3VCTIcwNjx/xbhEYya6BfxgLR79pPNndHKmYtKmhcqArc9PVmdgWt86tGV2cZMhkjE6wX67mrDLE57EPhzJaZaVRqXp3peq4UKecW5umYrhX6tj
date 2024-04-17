@@ -43,9 +43,10 @@ setreadonly(meta, false)
 
 meta.__namecall = newcclosure(function(...)
     local args = {...}
-    if getgenv().Ascend.Silent.Main.Enabled and getnamecallmethod() == "FireServer" and args[2] == "UpdateMousePos" then
-        local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-        local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+    local method = getnamecallmethod()
+    if getgenv().Ascend.Silent.Main.Enabled and method == "FireServer" and args[2] == "UpdateMousePos" then
+        local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
+        local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
         local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
         args[3] = TargetPos
         return old_nc(unpack(args))
