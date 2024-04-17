@@ -23,7 +23,7 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/ad
 local Script = {Functions = {}}
 local Target, Locked, AutoPredictionToggled, Range = nil, false, getgenv().Ascend.Camlock.Main.Prediction.Auto, math.huge
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
-local Mobile, PC = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled, not UserInputService.TouchEnabled and UserInputService.KeyboardEnabled
+local Mobile, PC = UserInputService.TouchEnabled, not UserInputService.TouchEnabled
 
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
