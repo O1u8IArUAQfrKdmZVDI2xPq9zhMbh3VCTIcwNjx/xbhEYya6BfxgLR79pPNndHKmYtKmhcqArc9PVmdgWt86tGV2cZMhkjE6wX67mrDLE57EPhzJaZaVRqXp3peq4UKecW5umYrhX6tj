@@ -337,7 +337,7 @@ local SilentRange = Categories.LegitCategory1.new_slider({
     max_value = 999, 
     allow_decimals = true, 
     callback = function(value)
-        getgenv().Ascend.Camlock.Main.Range = Range
+        getgenv().Ascend.Camlock.Main.Range = value
     end
 })
 
@@ -380,7 +380,6 @@ local AutoPrediction = Categories.LegitCategory1.new_toggle({
         AutoPredictionToggled = not AutoPredictionToggled
         task.spawn(function()
             while AutoPredictionToggled do task.wait()
-                print("poop")
                 local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
                 if Ping > 190 then
                     getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2169374
