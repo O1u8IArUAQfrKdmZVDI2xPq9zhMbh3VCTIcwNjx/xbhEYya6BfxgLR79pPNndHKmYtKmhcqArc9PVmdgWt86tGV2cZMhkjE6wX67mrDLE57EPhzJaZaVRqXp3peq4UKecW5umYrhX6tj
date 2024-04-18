@@ -1,3 +1,9 @@
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "NOTHING WROKS", -- Required
+	Text = "yes yes i know is patched i sleep rn and i fix when i come back from skool", -- Required
+	Icon = "rbxassetid://1234567890" -- Optional
+})
+
 --// Check Loaded
 if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
 getgenv().Loaded = not getgenv().Loaded
@@ -7,11 +13,11 @@ _G.script_key = getgenv().Script_Key or getgenv().Ascend.Script_Key
 local EncryptWhitelist = loadstring(game:HttpGet('https://raw.githubusercontent.com/dooms-scripts/projects/main/encrypt-whitelist-module'))()
 
 if not EncryptWhitelist.plr_is_whitelisted() then
-	return game.Players.LocalPlayer:Kick("@astonlix on Discord for whitelist")
+	return game.Players.LocalPlayer:Kick("DM @astonlix on Discord for whitelist")
 end
 
 --// Game Detection
-if game.PlaceId == 3634139746 or 9825515356 then
+if game.PlaceId == 3634139746 then
     print('[🔃] Ascend: Hood Customs Detected')
     loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/hc-bypass.lua'))()
 end
@@ -20,10 +26,8 @@ end
 loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/adonis-bypass.lua'))()
 
 --// Script
-local Script = {Functions = {}}
-local Target, Locked, AutoPredictionToggled, Range = nil, false, getgenv().Ascend.Camlock.Main.Prediction.Auto, math.huge
+local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, nil, nil
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
-local Mobile, PC = UserInputService.TouchEnabled, not UserInputService.TouchEnabled
 
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
@@ -31,28 +35,31 @@ RunService.Heartbeat:Connect(function()
             local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
             local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-            Camera.CFrame = CFrame.lookAt(Camera.CFrame.p, TargetPos)
+            Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
             end
         end
     end
 )
 
-local meta = getrawmetatable(game)
-local old_nc = meta.__namecall
-setreadonly(meta, false)
+--// Metatable
+local MT = getrawmetatable(game)
+local Old_NC = MT.__namecall
+setreadonly(MT, false)
 
-meta.__namecall = newcclosure(function(...)
-    local args = {...}
-    local method = getnamecallmethod()
-    if getgenv().Ascend.Silent.Main.Enabled and method == "FireServer" and args[2] == "UpdateMousePos" then
-        local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
-        local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
-        local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-        args[3] = TargetPos
-        return old_nc(unpack(args))
+MT.__namecall = newcclosure(function(...)
+    local Args = {...}
+    local Method = getnamecallmethod()
+    if getgenv().Ascend.Silent.Main.Enabled and Method == "FireServer" and Args[2] == "UpdateMousePos" then
+        if Target ~= nil then
+            local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
+            local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
+            local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+
+            Args[3] = TargetPos
+            return Old_NC(unpack(Args))
+        end
     end
-
-    return old_nc(...)
+    return Old_NC(...)
 end)
 
 --// Encrypt
@@ -60,32 +67,57 @@ local EncryptRepo = 'https://raw.githubusercontent.com/dooms-scripts/ui-librarie
 local EncryptLibrary, EncryptNotification, EncryptESP = loadstring(game:HttpGet(EncryptRepo .. 'encrypt.lua'))(), loadstring(game:HttpGet(EncryptRepo .. 'encrypt-notifications.lua'))(), loadstring(game:HttpGet(EncryptRepo .. 'encrypt-esp.lua'))()
 
 --// Get Distance from LocalPlayer to Object
-Script.Functions.GetDistance = function(Object)
-    local Distance = (Character.PrimaryPart.Position - Object.Position).Magnitude
-    return Distance
+local function Get_Distance(Object, Method)
+    local Position, IsVisibleOnViewport = Camera:WorldToScreenPoint(Object.Position)
+    if IsVisibleOnViewport then
+        if Method == "Center" then
+            local Distance = (Character.PrimaryPart.Position - Object.Position).Magnitude
+            return Distance
+        elseif Method == "Mouse" then
+            local Mouse = LocalPlayer:GetMouse()
+            local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Object.Position)).Magnitude
+            return Distance
+        end
+    end
+    return math.huge
 end
 
 --// Finds nearest enemy
-Script.Functions.FindNearestEnemy = function()
+local function FindNearestEnemy()
     local ClosestDistance, ClosestPlayer = math.huge, nil
+    local Mouse = LocalPlayer:GetMouse()
     local CenterPosition =
         Vector2.new(
         game:GetService("GuiService"):GetScreenResolution().X / 2,
         game:GetService("GuiService"):GetScreenResolution().Y / 2
     )
-    Range = getgenv().Ascend.Camlock.Main.Range
+    CamlockRange = getgenv().Ascend.Camlock.Main.Range
+    SilentRange = getgenv().Ascend.Silent.Main.Range
     for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
         if Player ~= LocalPlayer then
             local Character = Player.Character
-            if Character and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
+            if Character and Character:FindFirstChild("Humanoid") and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
                 local Position, IsVisibleOnViewport = Camera:WorldToViewportPoint(Character.PrimaryPart.Position)
                 if IsVisibleOnViewport then
-                    if Script.Functions.GetDistance(Character.PrimaryPart) < Range then
-                        local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
-                        if Distance < ClosestDistance then
-                            ClosestPlayer = Character[getgenv().Ascend.Camlock.Main.HitPart]
-                            ClosestDistance = Distance
+                    if getgenv().Ascend.Camlock.Enabled then
+                        local Distance = Get_Distance(Character.PrimaryPart, 'Center')
+                        if Distance < CamlockRange then
+                            local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                            if Distance < ClosestDistance then
+                                ClosestPlayer = Character[getgenv().Ascend.Camlock.Main.HitPart]
+                                ClosestDistance = Distance
+                            end
                         end
+                    elseif getgenv().Ascend.Silent.Enabled then
+                        local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                        if Distance < SilentRange then
+                            if Distance < ClosestDistance then
+                                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
+                                ClosestDistance = Distance
+                            end
+                        end
+                    else
+                        return nil
                     end
                 end
             end
@@ -95,62 +127,104 @@ Script.Functions.FindNearestEnemy = function()
     return ClosestPlayer
 end
 
-Script.Functions.CreateButton = function()
-    if Mobile then
-        local asd = {}
+if UserInputService.TouchEnabled then
+    local MenuButton = {}
 
-        function asd.new(instance, properties)
-            local i = Instance.new(instance)
-            for p,v in pairs(properties) do
-                local s, err = pcall(function()
-                    i[p] = v
-                end)
+    function MenuButton.new(instance, properties)
+        local i = Instance.new(instance)
+        for p,v in pairs(properties) do
+            local Sucess, Error = pcall(function()
+                i[p] = v
+            end)
 
-                if err then 
-                    warn('[!] PROBLEM CREATING INSTANCE "'..instance..'": '..err) 
-                end
+            if Error then 
+                warn('[!] PROBLEM CREATING INSTANCE "'..instance..'": '..Error) 
             end
-
-            return i
         end
 
-        ScreenGui = asd.new("ScreenGui", {
-            Parent = game:GetService("CoreGui") or gethui();
-            ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
-        })
-
-        Frame = asd.new("Frame", {
-            Parent = ScreenGui;
-            AnchorPoint = Vector2.new(0.5, 0.5);
-            BorderSizePixel = 0;
-            Size = UDim2.new(0.200000003, 0, 0.340000004, 0);
-            ClipsDescendants = true;
-            BorderColor3 = Color3.fromRGB(0, 0, 0);
-            Position = UDim2.new(0.194331989, 0, 0.151629075, 0);
-            BackgroundTransparency = 0.699999988079071;
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-        })
-
-        ImageButton = asd.new("ImageButton", {
-            Parent = Frame;
-            BackgroundTransparency = 1;
-            Image = [[https://www.roblox.com/asset/?id=16976953335]];
-            BorderSizePixel = 0;
-            Size = UDim2.new(1.00000024, 0, 1, 0);
-            BorderColor3 = Color3.fromRGB(0, 0, 0);
-            Position = UDim2.new(-0.00599975605, 0, 0.00200004573, 0);
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-        })
-
-        ImageButton.Activated:Connect(function()
-            Locked = not Locked
-            if Locked then
-                Target = Script.Functions.FindNearestEnemy()
-            elseif not Locked then
-                Target = nil
-            end
-        end)
+        return i
     end
+
+
+    ScreenGui = MenuButton.new("ScreenGui", {
+        Parent = game:GetService("CoreGui") or gethui();
+        IgnoreGuiInset = true;
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+    })
+
+    Frame = MenuButton.new("Frame", {
+        Parent = ScreenGui;
+        BorderSizePixel = 0;
+        Size = UDim2.new(0, 50, 0, 50);
+        BorderColor3 = Color3.fromRGB(0, 0, 0);
+        Position = UDim2.new(0.1, 0, 0.11, 0);
+        BackgroundTransparency = 0.8;
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+    })
+
+    ImageButton = MenuButton.new("ImageButton", {
+        Parent = Frame;
+        BackgroundTransparency = 1;
+        AnchorPoint = Vector2.new(0.5, 0.5);
+        Image = [[http://www.roblox.com/asset/?id=16976953335]];
+        BorderSizePixel = 0;
+        Size = UDim2.new(0, 50, 0, 50);
+        BorderColor3 = Color3.fromRGB(0, 0, 0);
+        Position = UDim2.new(0.5, 0, 0.5, 0);
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+    })
+    local LockButton = {}
+
+    function LockButton.new(instance, properties)
+        local i = Instance.new(instance)
+        for p,v in pairs(properties) do
+            local Success, Error = pcall(function()
+               i[p] = v
+            end)
+
+            if Error then 
+                warn('[!] PROBLEM CREATING INSTANCE "'..instance..'": '..Error) 
+            end
+        end
+
+        return i
+    end
+
+    ScreenGui = LockButton.new("ScreenGui", {
+        Parent = game:GetService("CoreGui") or gethui();
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+    })
+
+    Frame = LockButton.new("Frame", {
+        Parent = ScreenGui;
+        AnchorPoint = Vector2.new(0.5, 0.5);
+        BorderSizePixel = 0;
+        Size = UDim2.new(0.200000003, 0, 0.340000004, 0);
+        ClipsDescendants = true;
+        BorderColor3 = Color3.fromRGB(0, 0, 0);
+        Position = UDim2.new(0.194331989, 0, 0.151629075, 0);
+        BackgroundTransparency = 0.699999988079071;
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+    })
+
+    ImageButton = LockButton.new("ImageButton", {
+        Parent = Frame;
+        BackgroundTransparency = 1;
+        Image = [[https://www.roblox.com/asset/?id=16976953335]];
+        BorderSizePixel = 0;
+        Size = UDim2.new(1.00000024, 0, 1, 0);
+        BorderColor3 = Color3.fromRGB(0, 0, 0);
+        Position = UDim2.new(-0.00599975605, 0, 0.00200004573, 0);
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+    })
+    ImageButton.Activated:Connect(function()
+        Locked = not Locked
+        if Locked then
+            Target = FindNearestEnemy()
+       elseif not Locked then
+           Target = nil
+        end
+    end)
 end
 
 --// Encrypt Settings
@@ -261,7 +335,7 @@ local CamlockKeybind = Categories.LegitCategory1.new_keybind({
         if getgenv().Ascend.Camlock.Main.Enabled then
             Locked = not Locked
             if Locked then
-                Target = Script.Functions.FindNearestEnemy()
+                Target = FindNearestEnemy()
             elseif not Locked then
                 Target = nil
             end
@@ -290,8 +364,8 @@ local CamlockRange = Categories.LegitCategory1.new_slider({
     min_value = 0, 
     max_value = 999, 
     allow_decimals = true, 
-    callback = function(value)
-        getgenv().Ascend.Camlock.Main.Range = Range
+    callback = function(Value)
+        getgenv().Ascend.Camlock.Main.Range = Value
     end
 })
 
@@ -301,7 +375,7 @@ Categories.LegitCategory1.new_label({
 }).alignment('center')
 
 local Silent = Categories.LegitCategory1.new_toggle({
-    text = 'toggle', 
+    text = 'Silent Aim', 
     callback = function()
         getgenv().Ascend.Silent.Main.Enabled = not getgenv().Ascend.Silent.Main.Enabled
     end
@@ -314,7 +388,7 @@ local SilentKeybind = Categories.LegitCategory1.new_keybind({
         if getgenv().Ascend.Silent.Main.Enabled then
             Locked = not Locked
             if Locked then
-                Target = Script.Functions.FindNearestEnemy()
+                Target = FindNearestEnemy()
             elseif not Locked then
                 Target = nil
             end
@@ -332,12 +406,12 @@ local SilentHitPart = Categories.LegitCategory1.new_dropdown({
 
 local SilentRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
-    default_value = getgenv().Ascend.Camlock.Main.Range, -- optional
+    default_value = getgenv().Ascend.Silent.Main.Range,
     min_value = 0, 
     max_value = 999, 
     allow_decimals = true, 
-    callback = function(value)
-        getgenv().Ascend.Camlock.Main.Range = value
+    callback = function(Value)
+        getgenv().Ascend.Silent.Main.Range = Value
     end
 })
 
@@ -374,97 +448,59 @@ local VerticalPrediction = Categories.LegitCategory1.new_textbox({
 
 VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
 
+AutoPredictionToggled = getgenv().Ascend.Camlock.Main.Prediction.Auto
+
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
     callback = function(Value)
         AutoPredictionToggled = not AutoPredictionToggled
-        task.spawn(function()
-            while AutoPredictionToggled do task.wait()
+        if AutoPredictionToggled then
+            repeat
                 local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-                if Ping > 190 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2169374
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2169374
-                elseif Ping > 180 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2107828
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2107828
-                elseif Ping > 170 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.2046282
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.2046282
-                elseif Ping > 160 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1984736
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1984736
-                elseif Ping > 150 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.192319
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.192319
-                elseif Ping > 140 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1861644
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1861644
-                elseif Ping > 130 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1800098
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1800098
-                elseif Ping > 120 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1738552
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1738552
-                elseif Ping > 110 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1677006
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1677006
-                elseif Ping > 100 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.161546
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.161546
-                elseif Ping > 90 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1553914
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1553914
-                elseif Ping > 80 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1492368
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1492368
-                elseif Ping > 70 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1430822
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1430822
-                elseif Ping > 65 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.140049
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.140049
-                elseif Ping > 60 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1369276
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1369276
-                elseif Ping > 50 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.130773
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.130773
-                elseif Ping > 40 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1246184
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1246184
-                elseif Ping > 35 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1184638
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1184638
-                elseif Ping > 30 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1184638
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1184638
-                elseif Ping > 25 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1153865
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1153865
+
+                if Ping > 10 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P10_20'], getgenv().Ascend.AutoPrediction['P10_20']
                 elseif Ping > 20 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1123092
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1123092
-                elseif Ping > 15 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1092319
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1092319
-                elseif Ping > 10 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1061546
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1061546
-                elseif Ping > 5 then
-                    getgenv().Ascend.Camlock.Main.Prediction.Horizontal = 0.1030773
-                    getgenv().Ascend.Camlock.Main.Prediction.Vertical = 0.1030773
-                elseif not AutoPredictionToggled then
-                    getgenv().Ascend.Camlock.Main.Prediction = getgenv().Ascend.Camlock.Main.Prediction
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P20_30'], getgenv().Ascend.AutoPrediction['P20_30']
+                elseif Ping > 30 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P30_40'], getgenv().Ascend.AutoPrediction['P30_40']
+                elseif Ping > 40 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P40_50'], getgenv().Ascend.AutoPrediction['P40_50']
+                elseif Ping > 50 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P50_60'], getgenv().Ascend.AutoPrediction['P50_60']
+                elseif Ping > 60 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P60_70'], getgenv().Ascend.AutoPrediction['P60_70']
+                elseif Ping > 70 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P70_80'], getgenv().Ascend.AutoPrediction['P70_80']
+                elseif Ping > 80 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P80_90'], getgenv().Ascend.AutoPrediction['P80_90']
+                elseif Ping > 90 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P90_100'], getgenv().Ascend.AutoPrediction['P90_100']
+                elseif Ping > 100 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P110_120'], getgenv().Ascend.AutoPrediction['P110_120']
+                elseif Ping > 120 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P120_130'], getgenv().Ascend.AutoPrediction['P120_130']
+                elseif Ping > 130 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P130_140'], getgenv().Ascend.AutoPrediction['P130_140']
+                elseif Ping > 140 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P140_150'], getgenv().Ascend.AutoPrediction['P140_150']
+                elseif Ping > 150 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P150_160'], getgenv().Ascend.AutoPrediction['P150_160']
+                elseif Ping > 160 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P160_170'], getgenv().Ascend.AutoPrediction['P160_170']
+                elseif Ping > 170 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P170_180'], getgenv().Ascend.AutoPrediction['P170_180']
+                elseif Ping > 180 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P180_190'], getgenv().Ascend.AutoPrediction['P180_190']
+                elseif Ping > 190 then
+                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P190_200'], getgenv().Ascend.AutoPrediction['P190_200']
                 end
-                HorizontalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
-                VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
-            end
-        end)
+                HorizontalPrediction:update(getgenv().Ascend.Silent.Main.Prediction.Horizontal)
+                VerticalPrediction:update(getgenv().Ascend.Silent.Main.Prediction.Vertical)
+            until not AutoPredictionToggled
+        end
     end
 })
-task.wait(1)
-AutoPredictionToggled = AutoPrediction:get_value()
 AutoPrediction:update_value(getgenv().Ascend.Camlock.Main.Prediction.Auto)
 print(AutoPredictionToggled)
 warn("[💎] Ascend loaded!")
-Script.Functions.CreateButton()
