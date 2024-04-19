@@ -1,4 +1,4 @@
-if not getgenv().BladLock.ScriptKey then return end
+if  getgenv().BladLock.ScriptKey ~= "FREETRIAL" then return end
 
 -- don't edit any of getgenv() unless u know what ur doing u can do it in ui
 
