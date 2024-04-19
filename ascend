@@ -804,7 +804,7 @@ repeat task.wait()
     end
 until not getgenv().AutoStomp]]
 
-warn("[💎] Ascend loaded!")
+
 if true then return end
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "NOTHING WROKS", -- Required
@@ -1311,3 +1311,4 @@ local AutoPrediction = Categories.LegitCategory1.new_toggle({
 })
 AutoPrediction:update_value(getgenv().Ascend.Camlock.Main.Prediction.Auto)
 print(AutoPredictionToggled)
+warn("[💎] Ascend loaded!")
