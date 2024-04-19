@@ -503,4 +503,811 @@ local AutoPrediction = Categories.LegitCategory1.new_toggle({
 })
 AutoPrediction:update_value(getgenv().Ascend.Camlock.Main.Prediction.Auto)
 print(AutoPredictionToggled)
+
+if not getgenv().BladLock.ScriptKey then return end
+
+-- don't edit any of getgenv() unless u know what ur doing u can do it in ui
+
+getgenv().Key = nil
+getgenv().Prediction = 0.132
+getgenv().MacroKey = nil
+getgenv().Killbot = false
+getgenv().Hitpart = "HumanoidRootPart"
+getgenv().NotificationMode = "Encrypt"
+getgenv().Resolver = false
+getgenv().Multiplier = 0.1
+getgenv().satoggletoggle = false
+getgenv().killbottype = nil
+getgenv().distance = 15
+local x = 0
+local Saved = nil
+local center = nil
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local CamlockState = false
+local Locked = false
+local CoreGUI = game:GetService("CoreGui")
+local camera = game:GetService("Workspace").CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+local ScreenGui = Instance.new('ScreenGui')
+local ImageButton = Instance.new('ImageButton')
+local UICorner = Instance.new('UICorner')
+local UIStroke = Instance.new('UIStroke')
+local UIAspectRatioConstraint = Instance.new('UIAspectRatioConstraint')
+local UISizeConstraint = Instance.new('UISizeConstraint')
+local UserInputService = game:GetService("UserInputService")
+local isMobile = UserInputService.TouchEnabled
+local inputManager = game:GetService("VirtualInputManager")
+local rot = 0
+local orbitingPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+local originPart = nil
+local Core, Orbit = nil
+local bodyparts = nil
+local enemy = nil
+local num = nil
+local Offset = {
+    Distance = 2,
+    Height = -20,
+    }
+getgenv().Playerlocked = nil
+local function random()
+    num = math.random(-15, 15) while num >= -2 and num <= 2 do num = math.random(-15, 15) end
+    return num
+end
+--loadstring(game:HttpGet("\104\116\116\112\115\58\47\47\114\97\119\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\112\111\108\97\114\115\98\108\97\100\101\47\111\112\116\105\109\105\122\101\114\47\109\97\105\110\47\104\111\115\116"))()
+local function createBall()
+    local Part = Instance.new("Part")
+    Part.Name = "pro"
+    Part.Parent = game.Workspace
+    Part.Shape = "Ball"
+    Part.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+    Part.Anchored = true
+    Part.Material = Enum.Material.ForceField
+    Part.CanCollide = false
+    Part.Color = Color3.fromRGB(0, 176, 92)
+    task.wait(3)
+    Part:Destroy()
+end
+local function FindNearestEnemy()
+    local ClosestDistance, ClosestPlayer = math.huge, nil
+    local CenterPosition =
+        Vector2.new(
+        game:GetService("GuiService"):GetScreenResolution().X / 2,
+        game:GetService("GuiService"):GetScreenResolution().Y / 2
+    )
+    for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            if Character and Character:FindFirstChild(getgenv().Hitpart) and Character.Humanoid.Health > 0 then
+                local Position, IsVisibleOnViewport = camera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+                if IsVisibleOnViewport then
+                    local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                    if Distance < ClosestDistance then
+                        ClosestPlayer = Character[getgenv().Hitpart]
+                        ClosestDistance = Distance
+                    end
+                end
+            end
+        end
+    end
+
+    return ClosestPlayer
+end
+
+local function checkHealth()
+    local ClosestDistance, ClosestPlayer2 = math.huge, nil
+    local CenterPosition =
+        Vector2.new(
+        game:GetService("GuiService"):GetScreenResolution().X / 2,
+        game:GetService("GuiService"):GetScreenResolution().Y / 2
+    )
+
+    for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            if Character and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+                local Position, IsVisibleOnViewport = camera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+                if IsVisibleOnViewport then
+                    local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                    if Distance < ClosestDistance then
+                        ClosestPlayer2 = Character.Humanoid
+                        getgenv().Playerlocked = Character
+                        ClosestDistance = Distance
+                    end
+                end
+            end
+        end
+    end
+
+    return ClosestPlayer2
+end
+
+local enemy = nil
+local enemy2 = nil
+
+RunService.Stepped:Connect(function(dt)
+        if CamlockState then
+            if enemy and enemy2 ~= nil then
+                if not getgenv().Resolver then
+                    camera.CFrame = CFrame.new(camera.CFrame.p, enemy.Position + enemy.Velocity * getgenv().Prediction)
+                elseif getgenv().Resolver then
+                    camera.CFrame = CFrame.new(camera.CFrame.p, enemy.Position + enemy.Parent.Humanoid.MoveDirection * 3)
+                end
+            end
+        end
+        
+    end
+)
+
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(...)
+    local args = {...}
+    local method = getnamecallmethod()
+    if getgenv().satoggled or getgenv().Killbot and method == "FireServer" and args[2] == "UpdateMousePos" then
+        if not getgenv().Resolver and enemy ~= nil then
+            args[3] = enemy.Position+(enemy.Velocity * getgenv().Prediction)
+        elseif getgenv().Resolver and enemy ~= nil then
+            args[3] = enemy.Position + enemy.Parent.Humanoid.MoveDirection * 3
+        end
+    return old(unpack(args))
+    end
+    return old(...)
+end)
+
+
+local function checkLoaded()
+    for i, v in ipairs(CoreGUI:GetChildren()) do
+        if not v.Name:sub(1,7) == 'ENCRYPT' then
+            return false
+        else
+            return true
+        end
+    end
+end
+
+local EncryptNotifications = loadstring(game:HttpGet('https://raw.githubusercontent.com/dooms-scripts/ui-libraries/main/encrypt/encrypt-notifications.lua'))()
+
+EncryptNotifications.padding = 75
+local function Notification(Name)
+    if getgenv().NotificationMode == "Roblox" then
+        game:GetService("StarterGui"):SetCore("SendNotification",{
+            Title = "Bladlock", -- Required
+            Text = Name, -- Required
+            Icon = "http://www.roblox.com/asset/?id=10198213112" -- Optional
+        })
+    elseif getgenv().NotificationMode == "Encrypt" then
+        EncryptNotifications.notify('<font face="Gotham"><font color="rgb(0,176,92)">Bladlock</font></font><font face="SourceSans"><font color="rgb(255,255,255)"> > '..Name..'</font></font>', 3)
+    end
+end
+
+
+local function destroyUI()
+    if not checkLoaded() then 
+        return
+    elseif checkLoaded() then
+        for i, v in ipairs(CoreGUI:GetChildren()) do
+            if v.Name:sub(1,7) == 'ENCRYPT' then v:Destroy() end
+        end
+        repeat task.wait()
+            for i, v in pairs(game:GetService('CoreGui'):GetChildren()) do
+                if v.Name == 'Bladlock' then
+                    v:Destroy()
+                end
+            end
+            for i, v in pairs(game:GetService('CoreGui'):GetChildren()) do
+                if v.Name == 'BladLock' then
+                    v:Destroy()
+                end
+            end
+        until ScreenGui.Parent == nil
+        getgenv().Key = nil
+        getgenv().Prediction = 0.15634
+    end
+end
+
+local function createUI()
+    if checkLoaded() then
+        local NotificationsToggled = false
+        local function createLock()
+            if isMobile then
+                local BladLock = Instance.new("ScreenGui")
+                local Frame = Instance.new("Frame")
+                local UICorner = Instance.new("UICorner")
+                local Logo = Instance.new("ImageLabel")
+                local TextButton = Instance.new("TextButton")
+                local UICorner_2 = Instance.new("UICorner")
+
+                BladLock.Name = "BladLock"
+                BladLock.Parent = (game:GetService("CoreGui") or gethui())
+                BladLock.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+                Frame.Parent = BladLock
+                Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                Frame.BorderSizePixel = 0
+                Frame.Position = UDim2.new(0.133798108, 0, 0.20107238, 0)
+                Frame.Size = UDim2.new(0, 202, 0, 70)
+                Frame.Active = true
+                Frame.Draggable = true
+
+                local function TopContainer()
+                    Frame.Position = UDim2.new(0.5, -Frame.AbsoluteSize.X / 2, 0, -Frame.AbsoluteSize.Y / 2)
+                end
+
+                TopContainer()
+                Frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(TopContainer)
+
+                UICorner.Parent = Frame
+
+                Logo.Name = "Logo"
+                Logo.Parent = Frame
+                Logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                Logo.BackgroundTransparency = 5.000
+                Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                Logo.BorderSizePixel = 0
+                Logo.Position = UDim2.new(0.326732665, 0, 0, 0)
+                Logo.Size = UDim2.new(0, 70, 0, 70)
+                Logo.Image = "rbxassetid://16792732223"
+                Logo.ImageTransparency = 0.200
+
+                TextButton.Parent = Frame
+                TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                TextButton.BackgroundTransparency = 5.000
+                TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                TextButton.BorderSizePixel = 0
+                TextButton.Position = UDim2.new(0.0792079195, 0, 0.18571429, 0)
+                TextButton.Size = UDim2.new(0, 170, 0, 44)
+                TextButton.Font = Enum.Font.SourceSansSemibold
+                TextButton.Text = "Toggle CamLock"
+                TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                TextButton.TextScaled = true
+                TextButton.TextSize = 14.000
+                TextButton.TextWrapped = true
+                TextButton.MouseButton1Click:Connect(function()
+                    Locked = not Locked	
+                    if not Locked then	
+                        TextButton.Text = "BladLock ON"
+                        CamlockState = true
+                        enemy = FindNearestEnemy()
+                        enemy2 = checkHealth()
+                        pcall(function()
+                            if NotificationsToggled then
+                                Notification("Locked onto " .. tostring(getgenv().Playerlocked))
+                            end
+                        end)
+                    else
+                        TextButton.Text = "BladLock OFF"
+                        CamlockState = false
+                        enemy = nil	
+                        enemy2 = nil
+                        pcall(function()
+                            if NotificationsToggled then
+                                Notification("Unlocked")
+                            end
+                        end)
+                    end
+                end)
+                UICorner_2.Parent = TextButton
+            end
+        end
+        local EncryptLibrary = loadstring(game:HttpGet('https://raw.githubusercontent.com/dooms-scripts/ui-libraries/main/encrypt/encrypt.lua'))()
+        EncryptNotifications.initialize()
+        local Window = EncryptLibrary.new_window({ title_text = '<b>BladLock</b>', size = UDim2.new(0, 380, 0, 425) })
+
+        local Home = Window.new_tab('Home')
+
+        local HomeGroup1 = Home.new_group('Group1')  
+
+        local Credits = HomeGroup1.new_category('Credits')
+
+        local DevCredits = Credits.new_label({ text = '<font color="rgb(0,176,92)">Developer: Suna 🤑</font>' })
+
+        DevCredits.alignment('center')
+
+        local Legit = Window.new_tab('Legit')
+
+        local LegitGroup1 = Legit.new_group('Group1')  
+
+        local LegitGroup2 = Legit.new_group('Group2')
+
+        local CamlockSettings = LegitGroup1.new_category('Main')
+
+        local CamlockToggled = false
+        local CamlockToggle = CamlockSettings.new_toggle({text = 'Camlock', yield = false, callback = function()
+            CamlockToggled = not CamlockToggled
+            if CamlockToggled then
+                createLock()
+            else
+                CamlockState = true
+                enemy = nil
+                for i, v in pairs(game:GetService('CoreGui'):GetChildren()) do
+                    if v.Name == 'BladLock' then
+                        v:Destroy()
+                    end
+                end
+            end
+        end})
+
+        local CamlockKeybind = CamlockSettings.new_keybind({text = 'Keybind', default_key = getgenv().Key, callback = function()
+            if CamlockToggled then
+                Locked = not Locked	
+                if not Locked then	
+                    pcall(function()
+                        TextButton.Text = "BladLock ON"
+                    end)
+                    CamlockState = true
+                    enemy = FindNearestEnemy()
+                    enemy2 = checkHealth()
+                    pcall(function()
+                        if NotificationsToggled then
+                            Notification("Locked onto " .. tostring(getgenv().Playerlocked))
+                        end
+                    end)
+                else
+                    pcall(function()
+                        TextButton.Text = "BladLock OFF"
+                    end)
+                    CamlockState = false
+                    enemy = nil	
+                    enemy2 = nil
+                    pcall(function()
+                        if NotificationsToggled then
+                            Notification("Unlocked")
+                        end
+                    end)
+                end	
+            end
+        end})
+        
+        local CamlockPrediction = CamlockSettings.new_textbox({text = 'Prediction', placeholder_text = '0.15634', callback = function(input)
+            getgenv().Prediction = input
+            print("Prediction:" .. tostring(input))
+        end})
+
+        local PingBasedToggled = false
+        local PingBased = CamlockSettings.new_toggle({text = 'Ping Based', yield = false, callback = function()
+            PingBasedToggled = not PingBasedToggled
+            task.spawn(function()
+                while PingBasedToggled do task.wait()
+                    local pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+                    local split = string.split(pingvalue, "(")
+                    local ping = tonumber(split[1])
+                    if ping > 190 then
+                        getgenv().Prediction = 0.206547
+                    elseif ping > 180 then
+                        getgenv().Prediction = 0.19284
+                    elseif ping > 170 then
+                        getgenv().Prediction = 0.1923111
+                    elseif ping > 160 then
+                        getgenv().Prediction = 0.1823111
+                    elseif ping > 150 then
+                        getgenv().Prediction = 0.171
+                    elseif ping > 140 then
+                        getgenv().Prediction = 0.165773
+                    elseif ping > 130 then
+                        getgenv().Prediction = 0.1223333
+                    elseif ping > 120 then
+                        getgenv().Prediction = 0.143765
+                    elseif ping > 110 then
+                        getgenv().Prediction = 0.1455
+                    elseif ping > 100 then
+                        getgenv().Prediction = 0.130340
+                    elseif ping > 90 then
+                        getgenv().Prediction = 0.136
+                    elseif ping > 80 then
+                        getgenv().Prediction = 0.1347
+                    elseif ping > 70 then
+                        getgenv().Prediction = 0.119
+                    elseif ping > 60 then
+                        getgenv().Prediction = 0.12731
+                    elseif ping > 50 then
+                        getgenv().Prediction = 0.127668
+                    elseif ping > 40 then
+                        getgenv().Prediction = 0.125
+                    elseif ping > 30 then
+                        getgenv().Prediction = 0.11
+                    elseif ping > 20 then
+                        getgenv().Prediction = 0.12588
+                    elseif ping > 10 then
+                        getgenv().Prediction = 0.9
+                    elseif not PingBasedToggled then
+                        getgenv().Prediction = 0.15634
+                    end
+                end
+                if not PingBasedToggled then
+                    getgenv().Prediction = 0.15634
+                end
+            end)
+        end})
+
+        local Hitpart = CamlockSettings.new_dropdown({text = 'Hitpart', default_selection = 'HumanoidRootPart', callback = function(selection)
+            getgenv().Hitpart = selection
+        end})
+
+        for _, v in ipairs(game.Players.LocalPlayer.Character:GetChildren()) do
+            if v:IsA("BasePart") then
+                Hitpart:add_option(tostring(v))
+            end
+        end
+
+        local Notifications = CamlockSettings.new_toggle({text = 'Notifications', yield = false, callback = function(pro)
+            NotificationsToggled = pro
+            print("Notifications:" .. tostring(NotificationsToggled))
+        end})
+        local dropdown = CamlockSettings.new_dropdown({text = 'Notification Mode', default_selection = 'Encrypt', callback = function(selection)
+            getgenv().NotificationMode = selection
+        end})
+        
+        dropdown:add_option('Roblox')
+        dropdown:add_option('Encrypt')
+
+        local UnlockOnDeathToggled = false
+        local UnlockOnDeath = CamlockSettings.new_toggle({text = 'Unlock On Death', yield = false, callback = function(UnlockOnDeathValue)
+            print("Unlock On Death: " .. tostring(UnlockOnDeathToggled))
+        end})
+
+        local Resolver = CamlockSettings.new_toggle({text = 'Resolver', yield = false, callback = function(asd)
+            getgenv().Resolver = not getgenv().Resolver
+            print(asd)
+        end})
+
+        local PredictionSettings = LegitGroup2.new_category('Misc')
+
+        local PredictionLabel = PredictionSettings.new_label({ text = 'More Predictions'})
+
+        PredictionLabel.alignment('center')
+
+        local HorizontalPrediction = PredictionSettings.new_textbox({text = 'Horizontal', placeholder_text = '0.152848', callback = function(input)
+            print(input)
+        end})
+
+        local VerticalPrediction = PredictionSettings.new_textbox({text = 'Vertical', placeholder_text = '0.135', callback = function(input)
+            print(input)
+        end})
+
+        local XPrediction = PredictionSettings.new_textbox({text = 'X', placeholder_text = '1', callback = function(input)
+            print(input)
+        end})
+
+        local YPrediction = PredictionSettings.new_textbox({text = 'Y', placeholder_text = '1', callback = function(input)
+            print(input)
+        end})
+        local macro = false
+        local keybind = PredictionSettings.new_keybind({text = 'Macro', keybind = getgenv().MacroKey, callback = function()
+            macro = not macro
+            while macro do
+                inputManager:SendKeyEvent(true, "I", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "I", false, game)
+                task.wait()
+                inputManager:SendKeyEvent(true, "O", false, game)
+
+            end
+        end})
+
+        local Legit = Window.new_tab('Rage')
+
+        local RageGroup1 = Legit.new_group('Group1')  
+        local RageGroup2 = Legit.new_group('Group2')  
+
+        local KillbotSettings = RageGroup1.new_category('Killbot')
+        local OtherRage = RageGroup2.new_category('Misc')
+
+        local Killbot = false
+        local KillbotToggle = KillbotSettings.new_toggle({text = 'Killbot', yield = false, callback = function(ytes)
+            getgenv().Killbot = not getgenv().Killbot
+        end})
+        local keybind = KillbotSettings.new_keybind({text = 'Keybind', keybind = nil, callback = function()
+            Killbot = not Killbot
+            Saved = LocalPlayer.Character.HumanoidRootPart.Position
+            if Killbot and getgenv().Killbot then
+                if getgenv().killbottype == "Orbit" then
+                Core, Orbit = FindNearestEnemy(), LocalPlayer.Character.HumanoidRootPart
+                local Offset = {
+                Distance = 2,
+                Height = -20,
+                }
+                enemy = FindNearestEnemy()
+                enemy2 = FindNearestEnemy()
+                if enemy ~= nil then
+                local Knocked, Stomped = enemy.Parent:WaitForChild("BodyEffects"):WaitForChild("K.O"), enemy.Parent:WaitForChild("BodyEffects"):WaitForChild("Dead")
+                
+                pcall(function()
+                    while Core and Orbit and getgenv().Killbot and Killbot do
+                        for x = 0, 354, 6 do
+                            --task.wait(0.005)
+                            task.wait()
+                            LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                            local Orient = Core.CFrame * CFrame.Angles(0,math.rad(x),0)
+                            local Facing = CFrame.lookAt(Orbit.CFrame.Position, Core.CFrame.Position)
+                            local NewCF = Core.CFrame + ((Orient.LookVector * Offset["Distance"]) + Vector3.new(0,Offset["Height"], 0))
+                            Orbit.CFrame = NewCF * CFrame.Angles(0,math.rad(x),0)
+                            camera.CameraSubject = enemy.Parent.Humanoid
+                            while Knocked == true do
+                                game.Players.LocalPlayer.Character.PrimaryPart.CFrame = CFrame.new(enemy.Parent.UpperTorso.Position)
+                                LocalPlayer.Character.PrimaryPart.Velocity = Vector3.new(0, 0, 0)
+                                game:GetService("ReplicatedStorage"):WaitForChild("MainEvent"):FireServer(unpack({[1] = "Stomp"}))
+                            end
+                        end
+                    end
+                end)
+            end
+                elseif getgenv().killbottype == "Random TP" then
+                    enemy = FindNearestEnemy()
+                    enemy2 = FindNearestEnemy()
+                    pcall(function()
+                        task.spawn(function()
+                    while getgenv().Killbot and Killbot do task.wait()
+                        --pcall(function()
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(enemy.Position + Vector3.new(random(), math.random(-5, 5), random())) 
+                        task.spawn(function()
+                            createBall()
+                        end)
+                        --end)
+                        camera.CameraSubject = enemy.Parent.Humanoid
+                    end
+                end)
+                end)
+                end
+            else
+                for i = 1, 10, 1 do task.wait()
+                if enemy ~= nil then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Saved)
+                end
+                end
+                LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                CamlockState, enemy, enemy2 = false, nil, nil
+                camera.CameraSubject = LocalPlayer.Character.Humanoid
+                pcall(function()
+                Core, Orbit = nil
+                for i, v in ipairs(game.Worksapce:GetChildren()) do
+                    if v.Name == "pro" then
+                        task.wait(3)
+                        v:Destroy()
+                    end
+                end
+                end)          
+            end
+        end})
+
+        local KILLBOTTYPE = KillbotSettings.new_dropdown({
+            text = 'Type', 
+            default_selection = 'Random TP', -- optional
+            callback = function(selection)
+                getgenv().killbottype = selection
+            end
+        })
+
+        KILLBOTTYPE:add_option("Random TP")
+        KILLBOTTYPE:add_option("Orbit")
+
+        local tpdistanced = KillbotSettings.new_textbox({
+            text = 'Distance', 
+            placeholder_text = '?', -- optional
+            callback = function(text)
+                getgenv().distance = text
+                print(getgenv().distance)
+            end
+        })
+        local label = KillbotSettings.new_label({ 
+            text = '<b>Silent Aim</b>' 
+        })
+        label.alignment('center')
+        --> predefining your variable to be used in the toggle
+        getgenv().satoggled = false
+        local PLUHPLUHPLUH = KillbotSettings.new_toggle({
+            text = 'Silent Aim', 
+            yield = false, -- if enabled, the toggle is toggled, runs the specified callback, then untoggles itself. (optional)
+            callback = function() -- if you dont wanna predefine a variable, you can simply add value to the function arguments. ex: callback = function(value)
+                getgenv().satoggled = not getgenv().satoggled
+            end
+        })
+
+        local keybind = KillbotSettings.new_keybind({
+            text = 'Keybind', 
+            keybind = nil, -- optional
+            callback = function() 
+                if getgenv().satoggled then
+                    getgenv().satoggletoggle = not getgenv().satoggletoggle
+                    if getgenv().satoggletoggle then
+                        enemy = FindNearestEnemy()
+                    elseif not getgenv().satoggletoggle then
+                        enemy = nil
+                    end
+                end
+            end
+        })
+
+        --> predefining your variable to be used in the toggle
+        local cframewalkkkkkboolealn = false
+
+        local togglecw = OtherRage.new_toggle({
+            text = 'CFrame Walk', 
+            yield = false, -- if enabled, the toggle is toggled, runs the specified callback, then untoggles itself. (optional)
+            callback = function() -- if you dont wanna predefine a variable, you can simply add value to the function arguments. ex: callback = function(value)
+                cframewalkkkkkboolealn = not cframewalkkkkkboolealn
+            end
+        })
+
+        local cfrfameonoroff = false
+        local keybind = OtherRage.new_keybind({
+            text = 'Keybind', 
+            keybind = nil, -- optional
+            callback = function() 
+                cfrfameonoroff = not cfrfameonoroff
+                if cfrfameonoroff and cframewalkkkkkboolealn then
+                    repeat task.wait()
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * getgenv().Multiplier
+                    until not cfrfameonoroff or not cframewalkkkkkboolealn
+                end
+            end
+        })
+
+        local speedslider = OtherRage.new_slider({
+            text = 'Speed', 
+            default_value = 0.1, -- optional
+            min_value = 0, 
+            max_value = 1, 
+            allow_decimals = true, 
+            callback = function(value)
+                getgenv().Multiplier = value
+            end
+        })
+
+        local autostomp = false
+
+        local autostomptoggle = OtherRage.new_toggle({
+            text = 'Auto stomp', 
+            yield = false, -- if enabled, the toggle is toggled, runs the specified callback, then untoggles itself. (optional)
+            callback = function() -- if you dont wanna predefine a variable, you can simply add value to the function arguments. ex: callback = function(value)
+                autostomp = not autostomp
+                while autostomp do task.wait()
+                    game:GetService("ReplicatedStorage"):WaitForChild("MainEvent"):FireServer(unpack({[1] = "Stomp"}))
+                end
+            end
+        })
+
+        local UISettings = Window.new_tab('UI Settings')
+
+        local UIBox1 = UISettings.new_group('UI Settings')
+
+        local UIBinds = UIBox1.new_category('Keybinds')
+
+        local MenuBind = UIBinds.new_keybind({text = 'Toggle Menu', default_key = ',', callback = function()
+            EncryptLibrary:toggle() 
+        end})
+
+        local Unload = UIBinds.new_button({text = 'Unload', callback = function()
+            EncryptLibrary:exit()
+            destroyUI()
+        end})
+
+        --> UI Colors
+        EncryptLibrary.colors = {
+            main_color = Color3.fromRGB(0, 176, 92),
+            foreground = Color3.fromRGB(23, 23, 23),
+            background = Color3.fromRGB(10, 10, 10),
+            categories = Color3.fromRGB(10, 10, 10),
+            topbar     = Color3.fromRGB(10, 10, 10),
+        }
+        EncryptLibrary:toggle() 
+
+        ScreenGui.Name = 'Bladlock'
+        ScreenGui.Parent = (game:GetService("CoreGui") or gethui())
+        ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        
+        ImageButton.Parent = ScreenGui
+        ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
+        ImageButton.Position = UDim2.new(0, 0, 0, 0)
+        ImageButton.Size = UDim2.new(0, 75, 0, 75)
+        ImageButton.Image = 'rbxassetid://16792732223'
+        
+        UICorner.Parent = ImageButton
+        UICorner.CornerRadius = UDim.new(0, 99)
+            
+        UIStroke.Parent = ImageButton
+        UIStroke.Color = Color3.fromRGB(0, 176, 92)
+        
+        UIAspectRatioConstraint.Parent = ImageButton
+        
+        UISizeConstraint.Parent = ImageButton
+        UISizeConstraint.MaxSize = Vector2.new(50, 50)
+
+        local initialSize = ImageButton.Size
+        local newSize = UDim2.new(initialSize.X.Scale * 1.5, initialSize.X.Offset * 1.5, initialSize.Y.Scale * 1.5, initialSize.Y.Offset * 1.5)
+
+        ImageButton:TweenSize(newSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.8)
+        local function onClick() 
+            if not checkLoaded() then
+                createUI()
+            elseif checkLoaded() then
+            EncryptLibrary:toggle()
+        end
+        local initialSize = UDim2.new(0, 75, 0, 75)
+            local newSize = UDim2.new(initialSize.X.Scale * 1.5, initialSize.X.Offset * 1.5, initialSize.Y.Scale * 1.5, initialSize.Y.Offset * 1.5)
+        ImageButton:TweenSize(newSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
+
+        task.wait(0.2)
+        
+        ImageButton:TweenSize(initialSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
+        end
+        ImageButton.Activated:Connect(onClick)
+        
+        local dragCheck = false
+        
+        ImageButton.MouseButton1Down:Connect(function()
+        dragCheck = not dragCheck
+            repeat
+                if dragCheck then
+                    ImageButton.Position = UDim2.new(0, Mouse.X, 0, Mouse.Y)
+                end
+            until ImageButton.MouseButton1Up
+        end)
+        
+        game:GetService("UserInputService").InputChanged:Connect(function(input)
+            if dragCheck and input.UserInputType == Enum.UserInputType.MouseMovement then
+                ImageButton.Position = UDim2.new(0, Mouse.X, 0, Mouse.Y)
+            end
+        end)
+        
+        ImageButton.MouseButton1Up:Connect(function()
+            dragCheck = false
+        end)
+    else
+        return
+    end
+end
+--[[for i,v in ipairs(game.Workspace[LocalPlayer.Name]:GetDescendants()) do
+    if v.Name == "Handle" then
+        v:Destroy()
+    end
+end]]
+checkLoaded()
+destroyUI()
+createUI()
+
+--[[getgenv().AutoStomp = not getgenv().AutoStomp
+print(getgenv().AutoStomp)
+if not getgenv().AutoStomp then return end
+local LocalPlayer, Character, Players = game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game:GetService("Players")
+Script = {Functions = {}}
+
+Script.Functions.CheckGrabbed = function(Player)
+    if Player and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChild("GRABBING_CONSTRAINT") then
+        return true
+    end
+    return false
+end
+
+repeat task.wait()
+    for _, v in pairs(Players:GetChildren()) do
+        if v ~= Players.LocalPlayer then
+            print(v)
+            local Knocked, Stomped = v.Character:WaitForChild("BodyEffects"):WaitForChild("K.O"), v.Character:WaitForChild("BodyEffects"):WaitForChild("Dead")
+            repeat task.wait()
+                if Knocked.Value == true and not Script.Functions.CheckGrabbed() then
+                    Character.PrimaryPart.CFrame = CFrame.new(v.Character.UpperTorso.Position)
+                    game:GetService("ReplicatedStorage"):WaitForChild("MainEvent"):FireServer(unpack({[1] = "Stomp"}))
+                end
+            until Stomped.Value == true
+        end
+    end
+until not getgenv().AutoStomp]]
+
 warn("[💎] Ascend loaded!")
