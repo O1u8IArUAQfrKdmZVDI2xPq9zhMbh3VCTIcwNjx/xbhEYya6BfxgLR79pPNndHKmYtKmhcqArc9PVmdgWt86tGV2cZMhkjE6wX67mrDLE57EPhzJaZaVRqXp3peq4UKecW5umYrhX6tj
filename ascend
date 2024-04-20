@@ -483,7 +483,7 @@ PredictMovement:update_value(getgenv().Ascend.Silent.Main.Prediction.Enabled)
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
     callback = function(Value)
-        while Value do
+        while Value do task.wait()
             local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
             print(Ping)
             if Ping > 10 then
