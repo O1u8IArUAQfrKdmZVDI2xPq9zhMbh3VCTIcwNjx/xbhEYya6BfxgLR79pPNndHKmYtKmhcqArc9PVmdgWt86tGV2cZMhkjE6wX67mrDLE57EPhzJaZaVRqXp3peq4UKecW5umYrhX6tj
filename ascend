@@ -1,8 +1,5 @@
-game:GetService("StarterGui"):SetCore("SendNotification",{
-	Title = "NOTHING WROKS", -- Required
-	Text = "yes yes i know is patched i sleep rn and i fix when i come back from skool", -- Required
-	Icon = "rbxassetid://1234567890" -- Optional
-})
+--// Check Game Loaded
+repeat task.wait() until game:IsLoaded()
 
 --// Check Loaded
 if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
@@ -26,14 +23,14 @@ end
 loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/adonis-bypass.lua'))()
 
 --// Script
-local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, nil, nil
+local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
 
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
         if Target ~= nil then
-            local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-            local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+            local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
+            local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
             Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
             end
@@ -51,8 +48,8 @@ MT.__namecall = newcclosure(function(...)
     local Method = getnamecallmethod()
     if getgenv().Ascend.Silent.Main.Enabled and Method == "FireServer" and Args[2] == "UpdateMousePos" then
         if Target ~= nil then
-            local HorizontalPrediction = Vector3.new(Target.Velocity.X, 0, Target.Velocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
-            local VerticalPrediction = Vector3.new(0, Target.Velocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
+            local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
+            local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
 
             Args[3] = TargetPos
@@ -109,7 +106,7 @@ local function FindNearestEnemy()
                             end
                         end
                     elseif getgenv().Ascend.Silent.Enabled then
-                        local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                        local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Position.X, Position.Y)).Magnitude
                         if Distance < SilentRange then
                             if Distance < ClosestDistance then
                                 ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
@@ -117,6 +114,7 @@ local function FindNearestEnemy()
                             end
                         end
                     else
+                        print("NONE")
                         return nil
                     end
                 end
@@ -321,7 +319,7 @@ Categories.LegitCategory1.new_label({
 
 local Camlock = Categories.LegitCategory1.new_toggle({
     text = 'Camlock', 
-    callback = function()
+    callback = function(Toggle)
         getgenv().Ascend.Camlock.Main.Enabled = not getgenv().Ascend.Camlock.Main.Enabled
     end
 })
@@ -357,6 +355,7 @@ local Success, Error = pcall(function()
         end
     end
 end)
+if Error then warn(Error) end
 
 local CamlockRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
@@ -403,6 +402,8 @@ local SilentHitPart = Categories.LegitCategory1.new_dropdown({
         getgenv().Ascend.Silent.Main.HitPart = Selection
     end
 })
+
+if Error then warn(Error) end
 
 local SilentRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
@@ -457,7 +458,7 @@ local AutoPrediction = Categories.LegitCategory1.new_toggle({
         if AutoPredictionToggled then
             repeat
                 local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-
+                print(Ping)
                 if Ping > 10 then
                     getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P10_20'], getgenv().Ascend.AutoPrediction['P10_20']
                 elseif Ping > 20 then
