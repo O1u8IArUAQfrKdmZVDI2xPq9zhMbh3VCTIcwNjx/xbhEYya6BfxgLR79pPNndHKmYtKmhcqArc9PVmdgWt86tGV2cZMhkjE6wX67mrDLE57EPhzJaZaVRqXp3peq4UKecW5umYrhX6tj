@@ -96,7 +96,7 @@ local function FindNearestEnemy()
             if Character and Character:FindFirstChild("Humanoid") and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
                 local Position, IsVisibleOnViewport = Camera:WorldToViewportPoint(Character.PrimaryPart.Position)
                 if IsVisibleOnViewport then
-                    if getgenv().Ascend.Camlock.Enabled then
+                    if getgenv().Ascend.Camlock.Main.Enabled then
                         local Distance = Get_Distance(Character.PrimaryPart, 'Center')
                         if Distance < CamlockRange then
                             local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
@@ -105,7 +105,7 @@ local function FindNearestEnemy()
                                 ClosestDistance = Distance
                             end
                         end
-                    elseif getgenv().Ascend.Silent.Enabled then
+                    elseif getgenv().Ascend.Silent.Main.Enabled then
                         local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Position.X, Position.Y)).Magnitude
                         if Distance < SilentRange then
                             if Distance < ClosestDistance then
