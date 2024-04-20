@@ -1,3 +1,74 @@
+getgenv().Script_Key = '284u568i2272n1136f1136n1988w1136d1420r1704r1704z2556x'
+
+getgenv().Ascend = {
+    Settings = {
+        Build = 'v1'
+    },
+    Camlock = {
+        Main = {
+            Enabled = false,
+            Keybind = 'Q',
+            Prediction = {
+                Enabled = true,
+                Auto = true,
+                Horizontal = 0.132,
+                Vertical = 0.156,
+            },
+            HitPart = 'HumanoidRootPart',
+            Range = 250, -- no worky cuz rushed :'(
+        },
+    },
+    Silent = {
+        Main = {
+            Enabled = false,
+            Keybind = 'T',
+            Prediction = {
+                Enabled = true,
+                Auto = false, -- no worky use cam
+                Horizontal = 0.132,
+                Vertical = 0.156,
+            },
+            HitPart = 'HumanoidRootPart',
+            Range = 250,
+        },
+    },
+    AutoPrediction = {
+        P10_20 = 0.109,
+        P20_30 = 0.11,
+        P30_40 = 0.12,
+        P40_50 = 0.125,
+        P50_60 = 0.126,
+        P70_80 = 0.135,
+        P90_100 = 0.142,
+        P110_120 = 0.141,
+        P130_140 = 0.15,
+        P150_160 = 0.1574,
+        P160_170 = 0.1663,
+        P170_180 = 0.1672,
+        P180_190 = 0.184,
+        P190_200 = 0.186,
+    },
+    Smoothing = {
+        Enabled = true,
+        Power = 1,
+        Style = 'Elastic',
+        Direction = 'InOut',
+    },
+    Shake = {
+        Enabled = false,
+        Power = 1,
+    },
+    Notifications = {
+        Enabled = true,
+        Type = 'Encrypt'
+    },
+    Resolver = {
+        Enabled = false,
+        Type = 'MoveDirection'
+    }
+}
+
+--loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/Ascend/main/dahood.lua'))()
 --// Check Game Loaded
 repeat task.wait() until game:IsLoaded()
 
@@ -483,10 +554,9 @@ PredictMovement:update_value(getgenv().Ascend.Silent.Main.Prediction.Enabled)
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
     callback = function(Value)
-        while Value do task.wait()
+        while Value and task.wait() do task.wait()
             local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-            print(Ping)
-            if Ping > 10 then
+            if Ping > 10 then task.wait()
                 getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P10_20'], getgenv().Ascend.AutoPrediction['P10_20']
             elseif Ping > 20 then
                 getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P20_30'], getgenv().Ascend.AutoPrediction['P20_30']
