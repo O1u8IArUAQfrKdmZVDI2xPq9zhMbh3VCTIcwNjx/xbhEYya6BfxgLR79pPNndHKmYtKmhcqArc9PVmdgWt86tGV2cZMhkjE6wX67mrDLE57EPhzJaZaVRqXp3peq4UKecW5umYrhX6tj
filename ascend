@@ -23,7 +23,7 @@ end
 loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/adonis-bypass.lua'))()
 
 --// Script
-local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range
+local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange, NotificationsToggled, ResolverToggled = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range, getgenv().Ascend.Notifications.Enabled, getgenv().Ascend.Resolver.Enabled
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
 local EasingStyles = {
     'Linear',
@@ -46,21 +46,33 @@ local EasingDirection = {
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
         if Target ~= nil then
-            if getgenv().Ascend.Camlock.Main.Prediction.Enabled then
+            local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
+            local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+            local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+            local LockOn = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+            if getgenv().Ascend.Resolver.Enabled and getgenv().Ascend.Resolver.Type == 'MoveDirection' then 
+                Camera.CFrame = CFrame.lookat(Camera.CFrame.Position, Target.Parent.Humanoid * 19.64285714289 * getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
+            elseif getgenv().Ascend.Resolver.Enabled and getgenv().Ascend.Resolver.Type == 'Ignore Velocity (Y)' then
                 local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-                local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+                local VerticalPrediction = Vector3.new(0, 0, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
                 local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
                 Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
-            elseif not getgenv().Ascend.Camlock.Main.Prediction.Enabled then
-                Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, Target.Position)
-            elseif getgenv().Ascend.Camlock.Main.Prediction.Enabled and getgenv().Ascend.Smoothing.Enabled then
-                local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-                local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
-                local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-                local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
-                Camera.CFrame = CFrame.new:Lerp(Main, getgenv().Ascend.Smoothing.Power, getgenv().Ascend.Smoothing.Style, getgenv().Ascend.Smoothing.Direction)
             end
+
+            if getgenv().Ascend.Smoothing.Enabled then
+                if getgenv().Ascend.Shake.Enabled then
+                    local Shake = LockOn + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power) * 0.1)
+                    Camera.CFrame = Camera.CFrame:Lerp(Shake, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
+                else
+                    Camera.CFrame = Camera.CFrame:Lerp(LockOn, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
+                end
+            elseif getgenv().Ascend.Shake.Enabled then
+                local Shake = LockOn + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power) * 0.1)
+                Camera.CFrame = Shake
+            else
+                Camera.CFrame = LockOn
             end
+        end
         end
     end
 )
@@ -471,48 +483,46 @@ PredictMovement:update_value(getgenv().Ascend.Silent.Main.Prediction.Enabled)
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
     callback = function(Value)
-        if Value == true then
-            repeat task.wait()
-                local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-                print(Ping)
-                if Ping > 10 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P10_20'], getgenv().Ascend.AutoPrediction['P10_20']
-                elseif Ping > 20 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P20_30'], getgenv().Ascend.AutoPrediction['P20_30']
-                elseif Ping > 30 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P30_40'], getgenv().Ascend.AutoPrediction['P30_40']
-                elseif Ping > 40 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P40_50'], getgenv().Ascend.AutoPrediction['P40_50']
-                elseif Ping > 50 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P50_60'], getgenv().Ascend.AutoPrediction['P50_60']
-                elseif Ping > 60 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P60_70'], getgenv().Ascend.AutoPrediction['P60_70']
-                elseif Ping > 70 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P70_80'], getgenv().Ascend.AutoPrediction['P70_80']
-                elseif Ping > 80 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P80_90'], getgenv().Ascend.AutoPrediction['P80_90']
-                elseif Ping > 90 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P90_100'], getgenv().Ascend.AutoPrediction['P90_100']
-                elseif Ping > 100 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P110_120'], getgenv().Ascend.AutoPrediction['P110_120']
-                elseif Ping > 120 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P120_130'], getgenv().Ascend.AutoPrediction['P120_130']
-                elseif Ping > 130 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P130_140'], getgenv().Ascend.AutoPrediction['P130_140']
-                elseif Ping > 140 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P140_150'], getgenv().Ascend.AutoPrediction['P140_150']
-                elseif Ping > 150 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P150_160'], getgenv().Ascend.AutoPrediction['P150_160']
-                elseif Ping > 160 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P160_170'], getgenv().Ascend.AutoPrediction['P160_170']
-                elseif Ping > 170 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P170_180'], getgenv().Ascend.AutoPrediction['P170_180']
-                elseif Ping > 180 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P180_190'], getgenv().Ascend.AutoPrediction['P180_190']
-                elseif Ping > 190 then
-                    getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P190_200'], getgenv().Ascend.AutoPrediction['P190_200']
-                end
-            until not AutoPredictionToggled
+        while Value do
+            local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+            print(Ping)
+            if Ping > 10 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P10_20'], getgenv().Ascend.AutoPrediction['P10_20']
+            elseif Ping > 20 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P20_30'], getgenv().Ascend.AutoPrediction['P20_30']
+            elseif Ping > 30 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P30_40'], getgenv().Ascend.AutoPrediction['P30_40']
+            elseif Ping > 40 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P40_50'], getgenv().Ascend.AutoPrediction['P40_50']
+            elseif Ping > 50 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P50_60'], getgenv().Ascend.AutoPrediction['P50_60']
+            elseif Ping > 60 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P60_70'], getgenv().Ascend.AutoPrediction['P60_70']
+            elseif Ping > 70 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P70_80'], getgenv().Ascend.AutoPrediction['P70_80']
+            elseif Ping > 80 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P80_90'], getgenv().Ascend.AutoPrediction['P80_90']
+            elseif Ping > 90 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P90_100'], getgenv().Ascend.AutoPrediction['P90_100']
+            elseif Ping > 100 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P110_120'], getgenv().Ascend.AutoPrediction['P110_120']
+            elseif Ping > 120 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P120_130'], getgenv().Ascend.AutoPrediction['P120_130']
+            elseif Ping > 130 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P130_140'], getgenv().Ascend.AutoPrediction['P130_140']
+            elseif Ping > 140 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P140_150'], getgenv().Ascend.AutoPrediction['P140_150']
+            elseif Ping > 150 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P150_160'], getgenv().Ascend.AutoPrediction['P150_160']
+            elseif Ping > 160 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P160_170'], getgenv().Ascend.AutoPrediction['P160_170']
+            elseif Ping > 170 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P170_180'], getgenv().Ascend.AutoPrediction['P170_180']
+            elseif Ping > 180 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P180_190'], getgenv().Ascend.AutoPrediction['P180_190']
+            elseif Ping > 190 then
+                getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P190_200'], getgenv().Ascend.AutoPrediction['P190_200']
+            end
         end
     end
 })
@@ -556,6 +566,8 @@ local Smoothing = Categories.LegitCategory2.new_toggle({
     end
 })
 
+Smoothing:update_value(getgenv().Ascend.Smoothing.Enabled)
+
 local SmoothingPower = Categories.LegitCategory2.new_slider({
     text = 'Smoothing Power', 
     default_value = getgenv().Ascend.Smoothing.Power,
@@ -568,7 +580,7 @@ local SmoothingPower = Categories.LegitCategory2.new_slider({
 })
 
 local SmoothingStyle = Categories.LegitCategory2.new_dropdown({
-    text = 'Smoothing Styles', 
+    text = 'Styles', 
     default_selection = getgenv().Ascend.Smoothing.Style,
     callback = function(selection)
         getgenv().Ascend.Smoothing.Style = selection
@@ -583,14 +595,14 @@ end)
 if not Success and Error then warn(Error) end
 
 local SmoothingDirection = Categories.LegitCategory2.new_dropdown({
-    text = 'Smoothing Direction', 
+    text = 'Direction', 
     default_selection = getgenv().Ascend.Smoothing.Direction,
     callback = function(selection)
         getgenv().Ascend.Smoothing.Direction = selection
     end
 })
 local Success, Error = pcall(function()
-    for i, v in EasingStyles do
+    for i, v in EasingDirection do
         SmoothingDirection:add_option(v)
     end
 end)
@@ -608,6 +620,8 @@ local Shake = Categories.LegitCategory2.new_toggle({
     end
 })
 
+Shake:update_value(getgenv().Ascend.Shake.Enabled)
+
 local ShakePower = Categories.LegitCategory2.new_slider({
     text = 'Shake Power', 
     default_value = getgenv().Ascend.Shake.Power,
@@ -618,5 +632,54 @@ local ShakePower = Categories.LegitCategory2.new_slider({
         getgenv().Ascend.Shake.Power = value
     end
 })
+
+Categories.LegitCategory2.new_label({ 
+    text = '<b><font color="rgb(255, 255, 255)">Notifications</font></b>'
+}).alignment('center')
+
+local Notifications = Categories.LegitCategory2.new_toggle({
+    text = 'Enabled', 
+    callback = function(Value)
+        NotificationsToggled = Value
+    end
+})
+Notifications:update_value(getgenv().Ascend.Notifications.Enabled)
+
+local NotificationType = Categories.LegitCategory2.new_dropdown({
+    text = 'Type', 
+    default_selection = getgenv().Ascend.Notifications.Type,
+    callback = function(selection)
+        getgenv().Ascend.Notifications.Type = selection
+    end
+})
+NotificationType:add_option('Encrypt')
+NotificationType:add_option('Akali')
+NotificationType:add_option('Roblox')
+
+Categories.LegitCategory2.new_label({ 
+    text = '<b><font color="rgb(255, 255, 255)">Resolver</font></b>'
+}).alignment('center')
+
+local Resolver = Categories.LegitCategory2.new_toggle({
+    text = 'Enabled', 
+    callback = function(Value)
+        ResolverToggled = Value
+    end
+})
+
+local ResolverType = Categories.LegitCategory2.new_dropdown({
+    text = 'Type', 
+    default_selection = getgenv().Ascend.Resolver.Type,
+    callback = function(selection)
+        getgenv().Ascend.Resolver.Type = selection
+    end
+})
+
+ResolverType:add_option('MoveDirection')
+ResolverType:add_option('Recalculate Velocity')
+ResolverType:add_option('Ignore Velocity (Y)')
+
+
+
 
 
