@@ -25,14 +25,41 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/ad
 --// Script
 local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
+local EasingStyles = {
+    'Linear',
+    'Sine',
+    'Back',
+    'Quad',
+    'Quart',
+    'Bounce',
+    'Elastic',
+    'Exponential',
+    'Circular',
+    'Cubic',
+}
+local EasingDirection = {
+    'In',
+    'Out',
+    'InOut'
+}
 
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
         if Target ~= nil then
-            local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-            local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
-            local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-            Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+            if getgenv().Ascend.Camlock.Main.Prediction.Enabled then
+                local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
+                local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+                local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+                Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+            elseif not getgenv().Ascend.Camlock.Main.Prediction.Enabled then
+                Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, Target.Position)
+            elseif getgenv().Ascend.Camlock.Main.Prediction.Enabled and getgenv().Ascend.Smoothing.Enabled then
+                local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
+                local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+                local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+                local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+                Camera.CFrame = CFrame.new:Lerp(Main, getgenv().Ascend.Smoothing.Power, getgenv().Ascend.Smoothing.Style, getgenv().Ascend.Smoothing.Direction)
+            end
             end
         end
     end
@@ -355,7 +382,7 @@ local Success, Error = pcall(function()
         end
     end
 end)
-if Error then warn(Error) end
+if not Success and Error then warn(Error) end
 
 local CamlockRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
@@ -403,7 +430,7 @@ local SilentHitPart = Categories.LegitCategory1.new_dropdown({
     end
 })
 
-if Error then warn(Error) end
+if not Success and Error then warn(Error) end
 
 local SilentRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
@@ -424,39 +451,28 @@ local Success, Error = pcall(function()
     end
 end)
 
+if not Success and Error then warn(Error) end
+
 -- // Prediction Section
 Categories.LegitCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Prediction Settings</font></b>'
 }).alignment('center')
 
-local HorizontalPrediction = Categories.LegitCategory1.new_textbox({
-    text = 'Horizontal', 
-    placeholder_text = '?',
+local PredictMovement = Categories.LegitCategory1.new_toggle({
+    text = 'Predict Movement', 
     callback = function(Value)
-        getgenv().Ascend.Camlock.Main.Prediction.Horizontal = Value
+        getgenv().Ascend.Silent.Main.Prediction.Enabled = Value
+        getgenv().Ascend.Camlock.Main.Prediction.Enabled = Value
     end
 })
 
-HorizontalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
-
-local VerticalPrediction = Categories.LegitCategory1.new_textbox({
-    text = 'Vertical', 
-    placeholder_text = '?',
-    callback = function(Value)
-        getgenv().Ascend.Camlock.Main.Prediction.Horizontal = Value
-    end
-})
-
-VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
-
-AutoPredictionToggled = getgenv().Ascend.Camlock.Main.Prediction.Auto
+PredictMovement:update_value(getgenv().Ascend.Silent.Main.Prediction.Enabled)
 
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
     callback = function(Value)
-        AutoPredictionToggled = not AutoPredictionToggled
-        if AutoPredictionToggled then
-            repeat
+        if Value == true then
+            repeat task.wait()
                 local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
                 print(Ping)
                 if Ping > 10 then
@@ -496,12 +512,111 @@ local AutoPrediction = Categories.LegitCategory1.new_toggle({
                 elseif Ping > 190 then
                     getgenv().Ascend.Silent.Main.Prediction.HorizontalPrediction, getgenv().Ascend.Silent.Main.Prediction.VerticalPrediction = getgenv().Ascend.AutoPrediction['P190_200'], getgenv().Ascend.AutoPrediction['P190_200']
                 end
-                HorizontalPrediction:update(getgenv().Ascend.Silent.Main.Prediction.Horizontal)
-                VerticalPrediction:update(getgenv().Ascend.Silent.Main.Prediction.Vertical)
             until not AutoPredictionToggled
         end
     end
 })
-AutoPrediction:update_value(getgenv().Ascend.Camlock.Main.Prediction.Auto)
-print(AutoPredictionToggled)
+
+local HorizontalPrediction = Categories.LegitCategory1.new_textbox({
+    text = 'Horizontal', 
+    placeholder_text = '?',
+    callback = function(Value)
+        getgenv().Ascend.Camlock.Main.Prediction.Horizontal = Value
+    end
+})
+
+HorizontalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
+
+local VerticalPrediction = Categories.LegitCategory1.new_textbox({
+    text = 'Vertical', 
+    placeholder_text = '?',
+    callback = function(Value)
+        getgenv().Ascend.Camlock.Main.Prediction.Horizontal = Value
+    end
+})
+
+VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
+
+AutoPredictionToggled = getgenv().Ascend.Camlock.Main.Prediction.Auto
+
+
+AutoPrediction:update_value(getgenv().Ascend.Silent.Main.Prediction.Auto)
+print(AutoPrediction:get_value())
 warn("[💎] Ascend loaded!")
+
+--// Smoothness Section
+Categories.LegitCategory2.new_label({ 
+    text = '<b><font color="rgb(255, 255, 255)">Smoothing</font></b>'
+}).alignment('center')
+
+local Smoothing = Categories.LegitCategory2.new_toggle({
+    text = 'Enabled', 
+    callback = function(Value)
+        getgenv().Ascend.Smoothing.Enabled = Value
+    end
+})
+
+local SmoothingPower = Categories.LegitCategory2.new_slider({
+    text = 'Smoothing Power', 
+    default_value = getgenv().Ascend.Smoothing.Power,
+    min_value = 0, 
+    max_value = 2, 
+    allow_decimals = true, 
+    callback = function(value)
+        getgenv().Ascend.Smoothing.Power = value
+    end
+})
+
+local SmoothingStyle = Categories.LegitCategory2.new_dropdown({
+    text = 'Smoothing Styles', 
+    default_selection = getgenv().Ascend.Smoothing.Style,
+    callback = function(selection)
+        getgenv().Ascend.Smoothing.Style = selection
+    end
+})
+local Success, Error = pcall(function()
+    for i, v in EasingStyles do
+        SmoothingStyle:add_option(v)
+    end
+end)
+
+if not Success and Error then warn(Error) end
+
+local SmoothingDirection = Categories.LegitCategory2.new_dropdown({
+    text = 'Smoothing Direction', 
+    default_selection = getgenv().Ascend.Smoothing.Direction,
+    callback = function(selection)
+        getgenv().Ascend.Smoothing.Direction = selection
+    end
+})
+local Success, Error = pcall(function()
+    for i, v in EasingStyles do
+        SmoothingDirection:add_option(v)
+    end
+end)
+
+if not Success and Error then warn(Error) end
+
+Categories.LegitCategory2.new_label({ 
+    text = '<b><font color="rgb(255, 255, 255)">Shake</font></b>'
+}).alignment('center')
+
+local Shake = Categories.LegitCategory2.new_toggle({
+    text = 'Enabled', 
+    callback = function(Value)
+        getgenv().Ascend.Shake.Enabled = Value
+    end
+})
+
+local ShakePower = Categories.LegitCategory2.new_slider({
+    text = 'Shake Power', 
+    default_value = getgenv().Ascend.Shake.Power,
+    min_value = 0, 
+    max_value = 5, 
+    allow_decimals = true, 
+    callback = function(value)
+        getgenv().Ascend.Shake.Power = value
+    end
+})
+
+
