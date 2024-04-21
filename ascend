@@ -152,6 +152,14 @@ local function FindNearestEnemy()
                                 ClosestDistance = Distance
                             end
                         end
+                    elseif getgenv().Ascend.Killbot.Enabled then
+                        local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Position.X, Position.Y)).Magnitude
+                        if Distance < SilentRange then
+                            if Distance < ClosestDistance then
+                                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
+                                ClosestDistance = Distance
+                            end
+                        end
                     else
                         print("NONE")
                         return nil
