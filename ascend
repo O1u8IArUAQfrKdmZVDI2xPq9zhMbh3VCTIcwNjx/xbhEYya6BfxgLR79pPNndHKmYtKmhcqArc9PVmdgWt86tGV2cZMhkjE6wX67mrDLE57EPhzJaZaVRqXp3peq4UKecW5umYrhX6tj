@@ -695,7 +695,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
         KillbotToggled = not KillbotToggled
         if KillbotToggled then
             Target = FindNearestEnemy()
-            while Killbot:get_value() do
+            while Killbot:get_value() == true do
                 for x = 0, 360, (2 * math.pi) do task.wait()
                     if Target ~= nil then
                         local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
@@ -706,7 +706,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
 
                         local Facing = CFrame.lookAt(Orbit.CFrame.Position, Target.CFrame.Position)
 
-                        local NewCF = Target.CFrame + ((Orient.LookVector * getgenv().Killbot.Distance) + Vector3.new(0, getgenv().Killbot.Height, 0))
+                        local NewCF = Target.CFrame + ((Orient.LookVector * getgenv().Ascend.Killbot.Distance) + Vector3.new(0, getgenv().Ascend.Killbot.Height, 0))
 
                         Orbit.CFrame = NewCF * CFrame.Angles(0, math.rad(x), 0)
 
