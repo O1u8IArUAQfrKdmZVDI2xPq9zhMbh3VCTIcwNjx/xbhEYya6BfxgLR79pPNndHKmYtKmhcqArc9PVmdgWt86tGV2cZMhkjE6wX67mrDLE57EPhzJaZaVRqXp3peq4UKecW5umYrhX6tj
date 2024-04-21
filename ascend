@@ -708,7 +708,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
                 for x = 0, 360, (2 * math.pi) do task.wait()
                     if Target ~= nil then
                         local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
-                        
+   
                         game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(256^2)
 
                         local Orient = Target.CFrame * CFrame.Angles(0, math.rad(x), 0)
@@ -727,8 +727,9 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
                     end
                 end
             end
-        else
+        elseif not KillbotToggled or not Killbot:get_value() then
             Target = nil
+            Camera.CameraSubject = Character:FindFirstChild("Humanoid")
         end
     end
 })
