@@ -694,26 +694,28 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
     callback = function() 
         KillbotToggled = not KillbotToggled
         if KillbotToggled then
+            Target = FindNearestEnemy()
             while Killbot:get_value() do
                 for x = 0, 360, (2 * math.pi) do task.wait()
-                    local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
-                    Target = FindNearestEnemy()
-                    
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(256^2)
+                    if Target ~= nil then
+                        local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
+                        
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(256^2)
 
-                    local Orient = Target.CFrame * CFrame.Angles(0, math.rad(x), 0)
+                        local Orient = Target.CFrame * CFrame.Angles(0, math.rad(x), 0)
 
-                    local Facing = CFrame.lookAt(Orbit.CFrame.Position, Target.CFrame.Position)
+                        local Facing = CFrame.lookAt(Orbit.CFrame.Position, Target.CFrame.Position)
 
-                    local NewCF = Target.CFrame + ((Orient.LookVector * getgenv().Killbot.Distance) + Vector3.new(0, getgenv().Killbot.Height, 0))
+                        local NewCF = Target.CFrame + ((Orient.LookVector * getgenv().Killbot.Distance) + Vector3.new(0, getgenv().Killbot.Height, 0))
 
-                    Orbit.CFrame = NewCF * CFrame.Angles(0, math.rad(x), 0)
+                        Orbit.CFrame = NewCF * CFrame.Angles(0, math.rad(x), 0)
 
-                    Camera.CameraSubject = Target.Parent.Humanoid
+                        Camera.CameraSubject = Target.Parent.Humanoid
 
-                    RunService.RenderStepped:Wait()
-                    
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                        RunService.RenderStepped:Wait()
+                        
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                    end
                 end
             end
         else
