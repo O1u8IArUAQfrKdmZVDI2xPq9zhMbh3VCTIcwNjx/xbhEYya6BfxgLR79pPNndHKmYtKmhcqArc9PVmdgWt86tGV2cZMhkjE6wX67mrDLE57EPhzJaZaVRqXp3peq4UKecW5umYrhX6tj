@@ -23,7 +23,7 @@ end
 loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/adonis-bypass.lua'))()
 
 --// Script
-local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange, NotificationsToggled, ResolverToggled, KillbotToggled = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range, getgenv().Ascend.Notifications.Enabled, getgenv().Ascend.Resolver.Enabled, false
+local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange, NotificationsToggled, ResolverToggled, KillbotToggled, CrosshairSpeed = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range, getgenv().Ascend.Notifications.Enabled, getgenv().Ascend.Resolver.Enabled, false, 1
 local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
 local EasingStyles = {
     'Linear',
@@ -42,6 +42,7 @@ local EasingDirection = {
     'Out',
     'InOut'
 }
+local CrosshairOn = nil
 
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
@@ -328,8 +329,8 @@ local Groups = {
     LegitGroup2 = Tabs.Legit.new_group(),
     RageGroup1 = Tabs.Rage.new_group(),
     RageGroup2 = Tabs.Rage.new_group(),
-    ESPGroup1 = Tabs.ESP.new_group(),
-    ESPGroup2 = Tabs.ESP.new_group(),
+    RenderGroup1 = Tabs.ESP.new_group(),
+    RenderGroup2 = Tabs.ESP.new_group(),
     SettingsGroup1 = Tabs.Settings.new_group(),
     SettingsGroup2 = Tabs.Settings.new_group(),
 }
@@ -342,8 +343,8 @@ local Categories = {
     LegitCategory2 = Groups.LegitGroup2.new_category('Other'),
     RageCategory1 = Groups.RageGroup1.new_category('Target'),
     RageCategory2 = Groups.RageGroup2.new_category('Other'),
-    ESPCategory1 = Groups.ESPGroup1.new_category('Renders'),
-    ESPCategory2 = Groups.ESPGroup2.new_category('Color'),
+    RenderCategory1 = Groups.RenderGroup1.new_category('Renders'),
+    RenderCategory2 = Groups.RenderGroup2.new_category('Color'),
     SettingsCategory1 = Groups.SettingsGroup1.new_category('Menu'),
     SettingsCategory2 = Groups.SettingsGroup2.new_category('Theme'),
 }
@@ -721,15 +722,23 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
 
                         Camera.CameraSubject = Target.Parent.Humanoid
 
+                        LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += CrosshairSpeed
+                        LocalPlayer.PlayerGui.MainScreenGui.Aim.Position = UDim2.new(Target.Position)
+
+                        mouse1click()
+
                         RunService.RenderStepped:Wait()
                         
                         game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+
                     end
                 end
             end
         elseif not KillbotToggled or not Killbot:get_value() then
             Target = nil
-            Camera.CameraSubject = Character:FindFirstChild("Humanoid")
+            LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation = 0
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            Camera.CameraSubject = Character.Humanoid
         end
     end
 })
@@ -741,6 +750,7 @@ local KillbotSpeed = Categories.RageCategory1.new_textbox({
         getgenv().Ascend.Killbot.Speed = text
     end
 })
+KillbotSpeed:update(getgenv().Ascend.Killbot.Speed)
 
 local KillbotDistance = Categories.RageCategory1.new_textbox({
     text = 'Distance', 
@@ -760,11 +770,15 @@ local KillbotHeight = Categories.RageCategory1.new_textbox({
 })
 KillbotHeight:update(getgenv().Ascend.Killbot.Height)
 
-Categories.ESPCategory1.new_label({ 
+Categories.RageCategory2.new_label({ 
+    text = '<b><font color="rgb(255, 255, 255)">CFrame</font></b>'
+}).alignment('center')
+
+Categories.RenderCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Box</font></b>'
 }).alignment('center')
 
-local BoxEnabled = Categories.ESPCategory1.new_toggle({
+local BoxEnabled = Categories.RenderCategory1.new_toggle({
     text = 'Enabled', 
     callback = function(Value)
         if Value then
@@ -783,7 +797,7 @@ local BoxEnabled = Categories.ESPCategory1.new_toggle({
     end
 })
 
-local BoxColor = Categories.ESPCategory1.new_colorpicker({
+local BoxColor = Categories.RenderCategory1.new_colorpicker({
     text = 'Color', 
     default_color = Color3.fromRGB(255, 255, 255),
     callback = function(color)
@@ -799,7 +813,25 @@ local BoxColor = Categories.ESPCategory1.new_colorpicker({
     end
 })
 
+local CrosshairRotation = Categories.RenderCategory1.new_toggle({
+    text = 'Enabled', 
+    callback = function(Value)
+        CrosshairOn = not CrosshairOn
+        if CrosshairOn then
+            LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += CrosshairSpeed
+        elseif not CrosshairOn then
+            LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation = 0
+        end
+    end
+})
 
-
+local EditCrosshairSpeed = Categories.RenderCategory1.new_textbox({
+    text = 'Distance', 
+    placeholder_text = CrosshairSpeed,
+    callback = function(text)
+        CrosshairSpeed = text
+    end
+})
+EditCrosshairSpeed:update(CrosshairSpeed)
 
 
