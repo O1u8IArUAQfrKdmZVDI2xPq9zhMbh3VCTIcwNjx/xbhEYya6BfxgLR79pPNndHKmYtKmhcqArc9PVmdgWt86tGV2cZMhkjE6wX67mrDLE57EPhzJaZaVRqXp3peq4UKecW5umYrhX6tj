@@ -732,7 +732,7 @@ local KillbotDistance = Categories.RageCategory1.new_textbox({
 KillbotDistance:update(getgenv().Ascend.Killbot.Distance)
 
 local KillbotHeight = Categories.RageCategory1.new_textbox({
-    text = 'Distance', 
+    text = 'Height', 
     placeholder_text = getgenv().Ascend.Killbot.Height,
     callback = function(text)
         getgenv().Ascend.Killbot.Height = text
