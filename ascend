@@ -693,6 +693,7 @@ Categories.RageCategory1.new_label({
 local Killbot = Categories.RageCategory1.new_toggle({
     text = 'Enabled', 
     callback = function(Value)
+        getgenv().Ascend.Killbot.Enabled = Value
     end
 })
 
