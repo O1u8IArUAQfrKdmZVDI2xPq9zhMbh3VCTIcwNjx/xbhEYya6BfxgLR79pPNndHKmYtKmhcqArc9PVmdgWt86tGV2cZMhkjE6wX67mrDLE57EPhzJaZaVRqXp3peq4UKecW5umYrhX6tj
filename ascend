@@ -705,7 +705,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
         if KillbotToggled then
             Target = FindNearestEnemy()
             while Killbot:get_value() == true do
-                for x = 0, 360, (2 * math.pi) do task.wait()
+                for x = 0, 360, (2 * math.pi) do task.wait(getgenv().Ascend.Killbot.Speed / 100)
                     if Target ~= nil then
                         local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
    
@@ -734,6 +734,14 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
     end
 })
 
+local KillbotSpeed = Categories.RageCategory1.new_textbox({
+    text = 'Speed', 
+    placeholder_text = getgenv().Ascend.Killbot.Speed,
+    callback = function(text)
+        getgenv().Ascend.Killbot.Speed = text
+    end
+})
+
 local KillbotDistance = Categories.RageCategory1.new_textbox({
     text = 'Distance', 
     placeholder_text = getgenv().Ascend.Killbot.Distance,
@@ -750,6 +758,7 @@ local KillbotHeight = Categories.RageCategory1.new_textbox({
         getgenv().Ascend.Killbot.Height = text
     end
 })
+KillbotHeight:update(getgenv().Ascend.Killbot.Height)
 
 Categories.ESPCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Box</font></b>'
