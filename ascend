@@ -1,9 +1,10 @@
 --// Check Game Loaded
 repeat task.wait() until game:IsLoaded()
 
---// Check Loaded
+--// Check Script Loaded
 if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
 getgenv().Loaded = not getgenv().Loaded
+local Loading = tick()
 
 --// Whitelist System
 _G.script_key = getgenv().Script_Key or getgenv().Ascend.Script_Key
@@ -15,7 +16,7 @@ end
 
 --// Game Detection
 if game.PlaceId == 3634139746 then
-    print('[🔃] Ascend: Hood Customs Detected')
+    warn('[🔃] Ascend: Hood Customs Detected')
     loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/hc-bypass.lua'))()
 end
 
@@ -24,7 +25,12 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/ad
 
 --// Script
 local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange, NotificationsToggled, ResolverToggled, KillbotToggled, CrosshairSpeed = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range, getgenv().Ascend.Notifications.Enabled, getgenv().Ascend.Resolver.Enabled, false, 1
-local Players, RunService, UserInputService, LocalPlayer, Character, Camera = game:GetService("Players"), game:GetService("RunService"), game:GetService("UserInputService"), game.Players.LocalPlayer, game.Players.LocalPlayer.Character, game.Workspace.CurrentCamera
+local Players = game:GetService('Players')
+local RunService = game:GetService('RunService')
+local UserInputService = game:GetService('UserInputService')
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character
+local Camera = game.Workspace.CurrentCamera
 local EasingStyles = {
     'Linear',
     'Sine',
@@ -44,46 +50,41 @@ local EasingDirection = {
 }
 local CrosshairOn = nil
 
-
-
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
         if Target ~= nil then
-            if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-                Target.AssemblyLinearVelocity.Y = (Target.AssemblyLinearVelocity.Y * 0.5)
-            end
             local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
             local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-            local LockOn = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+            local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+            if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+                VerticalPrediction *= 0.5
+            end
             if getgenv().Ascend.Resolver.Enabled and getgenv().Ascend.Resolver.Type == 'MoveDirection' then 
                 Camera.CFrame = CFrame.lookat(Camera.CFrame.Position, Target.Parent.Humanoid * 19.64285714289 * getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
             elseif getgenv().Ascend.Resolver.Enabled and getgenv().Ascend.Resolver.Type == 'Ignore Velocity (Y)' then
-                local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-                local VerticalPrediction = Vector3.new(0, 0, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+                VerticalPrediction *= 0
                 local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
                 Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
-            end
-
-            if getgenv().Ascend.Smoothing.Enabled then
+            elseif getgenv().Ascend.Smoothing.Enabled then
                 if getgenv().Ascend.Shake.Enabled then
-                    local Shake = LockOn + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power) * 0.1)
+                    local Shake = Main + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
                     Camera.CFrame = Camera.CFrame:Lerp(Shake, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
                 else
-                    Camera.CFrame = Camera.CFrame:Lerp(LockOn, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
+                    Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
                 end
             elseif getgenv().Ascend.Shake.Enabled then
-                local Shake = LockOn + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
+                local Shake = Main + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
                 Camera.CFrame = Camera.CFrame:Lerp(Shake)
             else
-                Camera.CFrame = LockOn
+                Camera.CFrame = Main
             end
         end
         end
     end
 )
 
---// Metatable
+--// Hook
 local MT = getrawmetatable(game)
 local Old_NC = MT.__namecall
 setreadonly(MT, false)
@@ -299,7 +300,7 @@ EncryptNotification.initialize()
 local Watermark = EncryptLibrary.watermark({text = "Made by @vurelix", size = UDim2.new(0, 170, 0, 20)}) 
 local FrameTimer, FrameCounter, FPS = tick(), 0, 240
 --// Update watermark before every frame
-local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+local WatermarkConnection = RunService.RenderStepped:Connect(function()
     local Ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
 
     FrameCounter += 1
@@ -565,7 +566,6 @@ AutoPredictionToggled = getgenv().Ascend.Camlock.Main.Prediction.Auto
 
 AutoPrediction:update_value(getgenv().Ascend.Silent.Main.Prediction.Auto)
 print(AutoPrediction:get_value())
-warn("[💎] Ascend loaded!")
 
 --// Smoothness Section
 Categories.LegitCategory2.new_label({ 
@@ -715,7 +715,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
                     if Target ~= nil then
                         local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
    
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(256^2)
+                        Character.HumanoidRootPart.Velocity = Vector3.new(256^2)
 
                         local Orient = Target.CFrame * CFrame.Angles(0, math.rad(x), 0)
 
@@ -729,8 +729,6 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
 
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += CrosshairSpeed
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Position = UDim2.new(Target.Position)
-
-                        mouse1click()
 
                         RunService.RenderStepped:Wait()
                         
@@ -839,4 +837,6 @@ local EditCrosshairSpeed = Categories.RenderCategory1.new_textbox({
 })
 EditCrosshairSpeed:update(CrosshairSpeed)
 
-
+local Loaded = tick()
+local ScriptLoaded = Loaded - Loading
+warn(string.format('[💎] Ascend loaded in %f ms', ScriptLoaded))
