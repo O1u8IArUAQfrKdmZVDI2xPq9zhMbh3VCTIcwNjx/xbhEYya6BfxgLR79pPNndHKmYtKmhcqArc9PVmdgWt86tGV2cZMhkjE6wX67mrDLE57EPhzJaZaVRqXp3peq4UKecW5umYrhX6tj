@@ -44,9 +44,14 @@ local EasingDirection = {
 }
 local CrosshairOn = nil
 
+
+
 RunService.Heartbeat:Connect(function()
     if getgenv().Ascend.Camlock.Main.Enabled then
         if Target ~= nil then
+            if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+                Target.AssemblyLinearVelocity.Y = (Target.AssemblyLinearVelocity.Y * 0.5)
+            end
             local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
             local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
