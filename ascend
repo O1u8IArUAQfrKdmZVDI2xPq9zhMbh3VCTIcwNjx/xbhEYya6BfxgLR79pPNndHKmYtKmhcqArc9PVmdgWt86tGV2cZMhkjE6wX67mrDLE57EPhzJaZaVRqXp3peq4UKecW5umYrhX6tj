@@ -1,5 +1,5 @@
 --// Check Game Loaded
-repeat task.wait() until game:IsLoaded()
+if (not game:IsLoaded()) then game.Loaded:Wait() end
 
 --// Check Script Loaded
 if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
@@ -177,6 +177,12 @@ local function FindNearestEnemy()
     end
 
     return ClosestPlayer
+end
+
+local function ReturnTool()
+    if Character and Character:FindFirstChildWhichIsA("Tool") then 
+        return LocalPlayer.Character:FindFirstChildWhichIsA("Tool") or nil 
+    end
 end
 
 if UserInputService.TouchEnabled then
@@ -730,6 +736,11 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += CrosshairSpeed
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Position = UDim2.new(Target.Position)
 
+                        local Tool = ReturnTool()
+                        if Tool then
+                            Tool:Activate()
+                        end
+
                         RunService.RenderStepped:Wait()
                         
                         game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -839,4 +850,4 @@ EditCrosshairSpeed:update(CrosshairSpeed)
 
 local Loaded = tick()
 local ScriptLoaded = Loaded - Loading
-warn(string.format('[💎] Ascend loaded in %f ms', ScriptLoaded))
+warn(string.format('[💎] Ascend loaded in %fms', ScriptLoaded))
