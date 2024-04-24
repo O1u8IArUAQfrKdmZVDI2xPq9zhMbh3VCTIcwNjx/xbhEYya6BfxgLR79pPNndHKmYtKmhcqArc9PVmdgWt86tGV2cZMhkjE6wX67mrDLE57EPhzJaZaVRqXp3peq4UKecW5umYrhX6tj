@@ -2,32 +2,45 @@
 if (not game:IsLoaded()) then game.Loaded:Wait() end
 
 --// Check Script Loaded
-if getgenv().Loaded or getgenv().ENCRYPT_LIB_LOADED then warn("[⚠️] Ascend is already loaded!") return end
+if (getgenv().Loaded) or (getgenv().ENCRYPT_LIB_LOADED) then warn("[⚠️] Ascend is already loaded!") return end
 getgenv().Loaded = not getgenv().Loaded
+
 local Loading = tick()
 
 --// Whitelist System
 _G.script_key = getgenv().Script_Key or getgenv().Ascend.Script_Key
 local EncryptWhitelist = loadstring(game:HttpGet('https://raw.githubusercontent.com/dooms-scripts/projects/main/encrypt-whitelist-module'))()
 
-if not EncryptWhitelist.plr_is_whitelisted() then
+if (not EncryptWhitelist.plr_is_whitelisted()) then
 	return game.Players.LocalPlayer:Kick("DM @astonlix on Discord for whitelist")
 end
 
 --// Game Detection
-if game.PlaceId == 3634139746 then
+if (game.PlaceId == 3634139746) then
     warn('[🔃] Ascend: Hood Customs Detected')
     loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/hc-bypass.lua'))()
 end
 
 --// Adonis Bypass
-loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/adonis-bypass.lua'))()
+if (getgenv().Ascend.Settings.Disabler == 'Adonis') then
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/Astonlix/LuaU/Main/adonis-bypass.lua'))()
+end
 
---// Script
-local Target, Locked, AutoPredictionToggled, SilentRange, CamlockRange, NotificationsToggled, ResolverToggled, KillbotToggled, CrosshairSpeed = nil,false, getgenv().Ascend.Camlock.Main.Prediction.Auto, getgenv().Ascend.Silent.Main.Range, getgenv().Ascend.Camlock.Main.Range, getgenv().Ascend.Notifications.Enabled, getgenv().Ascend.Resolver.Enabled, false, 1
+--// Services
 local Players = game:GetService('Players')
 local RunService = game:GetService('RunService')
 local UserInputService = game:GetService('UserInputService')
+
+--// Variables
+local Ascend = getgenv().Ascend
+local Target = nil
+local Locked = false
+local PingBased = Ascend.Camlock.Main.Prediction.PingBased
+local CamlockRange = Ascend.Camlock.Main.Range
+local SilentRange = Ascend.Silent.Main.Range
+local NotificationsToggled = Ascend.Notifications.Enabled
+local ResolverType = Ascend.Resolver.Enabled
+local KillbotToggled = Ascend['Target Strafe'].Orbit.Enabled or Ascend['Target Strafe'].Random.Enabled
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character
 local Camera = game.Workspace.CurrentCamera
@@ -48,38 +61,38 @@ local EasingDirection = {
     'Out',
     'InOut'
 }
-local CrosshairOn = nil
 
 RunService.Heartbeat:Connect(function()
-    if getgenv().Ascend.Camlock.Main.Enabled then
-        if Target ~= nil then
-            local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-            local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
-            local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-            local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
-            if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-                VerticalPrediction *= 0.5
-            end
-            if getgenv().Ascend.Resolver.Enabled and getgenv().Ascend.Resolver.Type == 'MoveDirection' then 
-                Camera.CFrame = CFrame.lookat(Camera.CFrame.Position, Target.Parent.Humanoid * 19.64285714289 * getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
-            elseif getgenv().Ascend.Resolver.Enabled and getgenv().Ascend.Resolver.Type == 'Ignore Velocity (Y)' then
-                VerticalPrediction *= 0
-                local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
-                Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
-            elseif getgenv().Ascend.Smoothing.Enabled then
-                if getgenv().Ascend.Shake.Enabled then
-                    local Shake = Main + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
-                    Camera.CFrame = Camera.CFrame:Lerp(Shake, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
-                else
-                    Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
-                end
-            elseif getgenv().Ascend.Shake.Enabled then
-                local Shake = Main + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
-                Camera.CFrame = Camera.CFrame:Lerp(Shake)
-            else
-                Camera.CFrame = Main
-            end
+    if (not getgenv().Ascend.Camlock.Main.Enabled) then return end
+        if (Target == nil) then return end
+        
+        local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
+        local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+        local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+        local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+
+        if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+            VerticalPrediction *= 0.5
+            Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
         end
+       
+        if (getgenv().Ascend.Camlock.Smoothing.Enabled) then
+            Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
+        elseif (getgenv().Ascend.Camlock.Shake.Enabled) then
+            local Shake = Main + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
+            Camera.CFrame = Camera.CFrame:Lerp(Shake, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
+        end
+
+        if (getgenv().Ascend.Resolver.Enabled) and (getgenv().Ascend.Resolver.Type == 'MoveDirection') then
+            Camera.CFrame = CFrame.lookat(Camera.CFrame.Position, Target.Parent.Humanoid * 19.64285714289 * getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
+        elseif (getgenv().Ascend.Resolver.Enabled) and (getgenv().Ascend.Resolver.Type == 'Ignore Velocity (Y)') then
+            VerticalPrediction *= 0
+            local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+            Camera.CFrame = Main
+        end
+
+        if (not getgenv().Ascend.Camlock.Smoothing.Enabled and getgenv().ascend.Camlock.Shake.Enabled and getgenv().Ascend.Resolver.Enabled) then
+            Camera.CFrame = Main
         end
     end
 )
@@ -90,18 +103,18 @@ local Old_NC = MT.__namecall
 setreadonly(MT, false)
 
 MT.__namecall = newcclosure(function(...)
-    local Args = {...}
-    local Method = getnamecallmethod()
-    if getgenv().Ascend.Silent.Main.Enabled or getgenv().Ascend.Killbot.Enabled and Method == "FireServer" and Args[2] == "UpdateMousePos" then
-        if Target ~= nil then
-            local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
-            local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
-            local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+    local Arguments, Method = {...}, getnamecallmethod()
 
-            Args[3] = TargetPos
-            return Old_NC(unpack(Args))
-        end
+    if (not checkcaller() and ((getgenv().Ascend.Silent.Main.Enabled) or (getgenv().Ascend.Killbot.Enabled)) and (Target) and (Method == 'FireServer') and (Arguments[2] == 'UpdateMousePos')) then
+
+    local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
+    local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
+    local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
+
+    Arguments[3] = TargetPos
+    return Old_NC(unpack(Arguments))
     end
+
     return Old_NC(...)
 end)
 
@@ -111,77 +124,80 @@ local EncryptLibrary, EncryptNotification, EncryptESP = loadstring(game:HttpGet(
 
 --// Get Distance from LocalPlayer to Object
 local function Get_Distance(Object, Method)
-    local Position, IsVisibleOnViewport = Camera:WorldToScreenPoint(Object.Position)
-    if IsVisibleOnViewport then
-        if Method == "Center" then
-            local Distance = (Character.PrimaryPart.Position - Object.Position).Magnitude
-            return Distance
-        elseif Method == "Mouse" then
-            local Mouse = LocalPlayer:GetMouse()
-            local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Object.Position)).Magnitude
-            return Distance
-        end
+    local IsVisibleOnViewport = Camera:WorldToScreenPoint(Object.Position)
+    
+    if (not IsVisibleOnViewport) then return end
+
+    if Method == "Center" then
+        local Distance = (Character.PrimaryPart.Position - Object.Position).Magnitude
+        return Distance
+    elseif Method == "Mouse" then
+        local Mouse = LocalPlayer:GetMouse()
+        local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Object.Position)).Magnitude
+        return Distance
     end
+
     return math.huge
 end
 
+
 --// Finds nearest enemy
 local function FindNearestEnemy()
-    local ClosestDistance, ClosestPlayer = math.huge, nil
+    local ClosestDistance, ClosestPlayer = math.huge
     local Mouse = LocalPlayer:GetMouse()
     local CenterPosition =
         Vector2.new(
         game:GetService("GuiService"):GetScreenResolution().X / 2,
         game:GetService("GuiService"):GetScreenResolution().Y / 2
     )
-    CamlockRange = getgenv().Ascend.Camlock.Main.Range
-    SilentRange = getgenv().Ascend.Silent.Main.Range
-    for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
-        if Player ~= LocalPlayer then
-            local Character = Player.Character
-            if Character and Character:FindFirstChild("Humanoid") and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
-                local Position, IsVisibleOnViewport = Camera:WorldToViewportPoint(Character.PrimaryPart.Position)
-                if IsVisibleOnViewport then
-                    if getgenv().Ascend.Camlock.Main.Enabled then
-                        local Distance = Get_Distance(Character.PrimaryPart, 'Center')
-                        if Distance < CamlockRange then
-                            local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
-                            if Distance < ClosestDistance then
-                                ClosestPlayer = Character[getgenv().Ascend.Camlock.Main.HitPart]
-                                ClosestDistance = Distance
-                            end
-                        end
-                    elseif getgenv().Ascend.Silent.Main.Enabled then
-                        local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Position.X, Position.Y)).Magnitude
-                        if Distance < SilentRange then
-                            if Distance < ClosestDistance then
-                                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
-                                ClosestDistance = Distance
-                            end
-                        end
-                    elseif getgenv().Ascend.Killbot.Enabled then
-                        local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Position.X, Position.Y)).Magnitude
-                        if Distance < SilentRange then
-                            if Distance < ClosestDistance then
-                                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
-                                ClosestDistance = Distance
-                            end
-                        end
-                    else
-                        print("NONE")
-                        return nil
-                    end
-                end
+    CamlockRange = Ascend.Camlock.Main.Range
+    SilentRange = Ascend.Silent.Main.Range
+
+    for _, Player in pairs(game:GetService("Players"):GetPlayers()) do
+        if (Player == LocalPlayer) then continue end
+
+        local Character = Player.Character
+        local Humanoid = Character and Character:FindFirstChild('Humanoid')
+
+        if (not Humanoid) and (Humanoid.Health > 0) then continue end
+
+        local IsVisibleOnViewport = Camera:WorldToViewportPoint(Character.PrimaryPart.Position)
+
+        if (not IsVisibleOnViewport) then continue end
+
+            if getgenv().Ascend.Camlock.Main.Enabled then
+                local Distance = Get_Distance(Character.PrimaryPart, 'Center')
+                    
+                if (not Distance < CamlockRange) then continue end
+
+                ClosestPlayer = Character[getgenv().Ascend.Camlock.Main.HitPart]
+                ClosestDistance = Distance
+            elseif getgenv().Ascend.Silent.Main.Enabled then
+                local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
+
+                if (not Distance < SilentRange) then continue end
+
+                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
+                ClosestDistance = Distance
+            elseif getgenv().Ascend.Killbot.Enabled then
+                local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
+
+                if (not Distance < SilentRange) then continue end
+
+                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
+                ClosestDistance = Distance
+            else
+                return nil
             end
-        end
     end
 
     return ClosestPlayer
 end
 
+--// Searches for tool
 local function ReturnTool()
-    if Character and Character:FindFirstChildWhichIsA("Tool") then 
-        return LocalPlayer.Character:FindFirstChildWhichIsA("Tool") or nil 
+    if (Character) and (Character:FindFirstChildWhichIsA("Tool")) then 
+        return Character:FindFirstChildWhichIsA("Tool") or nil 
     end
 end
 
