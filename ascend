@@ -15,6 +15,11 @@ if (not EncryptWhitelist.plr_is_whitelisted()) then
 	return game.Players.LocalPlayer:Kick("DM @astonlix on Discord for whitelist")
 end
 
+--// Check if updated
+if (not getgenv().Ascend.Settings.Version == 'v1.8') then
+    return game.Players.LocalPlayer:Kick("Outdated version!")
+end
+
 --// Game Detection
 if (game.PlaceId == 3634139746) then
     warn('[🔃] Ascend: Hood Customs Detected')
