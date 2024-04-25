@@ -67,7 +67,7 @@ local EasingDirection = {
     'InOut'
 }
 
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
     if (not Ascend.Camlock.Main.Enabled) then return end
         if (Target == nil) then return end
         
@@ -82,10 +82,10 @@ RunService.Heartbeat:Connect(function()
         end
        
         if (Ascend.Camlock.Smoothing.Enabled) then
-            Camera.CFrame = Camera.CFrame:Lerp(Main, Ascend.Camlock.Smoothing.Power, Enum.EasingStyle[Ascend.Camlock.Smoothing.Style], Enum.EasingDirection[Ascend.Camlock.Smoothing.Direction])
+            Camera.CFrame = Camera.CFrame:Lerp(Main, Ascend.Camlock.Smoothing.Amount, Enum.EasingStyle[Ascend.Camlock.Smoothing.Style], Enum.EasingDirection[Ascend.Camlock.Smoothing.Direction])
         elseif (Ascend.Camlock.Shake.Enabled) then
-            local Shake = Main + Vector3.new(math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount), math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount), math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount))
-            Camera.CFrame = Camera.CFrame:Lerp(Shake, Ascend.Camlock.Smoothing.Power, Enum.EasingStyle[Ascend.Camlock.Smoothing.Style], Enum.EasingDirection[Ascend.Camlock.Smoothing.Direction])
+            local Shake = Main + Vector3.new(math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount), math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount), math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount) * 0.1)
+            Camera.CFrame = Camera.CFrame:Lerp(Shake, Ascend.Camlock.Smoothing.Amount, Enum.EasingStyle[Ascend.Camlock.Smoothing.Style], Enum.EasingDirection[Ascend.Camlock.Smoothing.Direction])
         end
 
         if (Ascend.Resolver.Enabled) and (Ascend.Resolver.Type == 'MoveDirection') then
@@ -110,7 +110,7 @@ setreadonly(MT, false)
 MT.__namecall = newcclosure(function(...)
     local Arguments, Method = {...}, getnamecallmethod()
 
-    if (not checkcaller() and Ascend.Silent.Main.Enabled or KillbotToggled and Target and Method == 'FireServer' and Arguments[2] == 'UpdateMousePos') then
+    if (not checkcaller() and Ascend.Silent.Main.Enabled or KillbotToggled and Target ~= nil and Method == 'FireServer' and Arguments[2] == 'UpdateMousePos') then
 
     local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * Ascend.Silent.Main.Prediction.Horizontal
     local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * Ascend.Silent.Main.Prediction.Vertical
@@ -153,50 +153,48 @@ end
 
 --// Finds nearest enemy
 local function FindNearestEnemy()
-    local ClosestDistance, ClosestPlayer = math.huge
-    local Mouse = LocalPlayer:GetMouse()
-    CamlockRange = Ascend.Camlock.Main.Range
-    SilentRange = Ascend.Silent.Main.Range
+    local Distance, Player = math.huge
+ 
+    for Index, Value in pairs(Players:GetPlayers()) do
+        if (Value == LocalPlayer) then continue end
+ 
+        local Character = Value.Character
+        local RootPart  = Character and Character:FindFirstChild('HumanoidRootPart')
+        local CenterPosition =
+            Vector2.new(
+            game:GetService("GuiService"):GetScreenResolution().X / 2,
+            game:GetService("GuiService"):GetScreenResolution().Y / 2
+        )
+ 
+        if (not RootPart) then continue end
+ 
+        local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
 
-    for _, Player in pairs(game:GetService("Players"):GetPlayers()) do
-        if (Player == LocalPlayer) then continue end
+        if Ascend.Camlock.Main.Enabled then
+            local Magnitude = Get_Distance(Character.PrimaryPart, 'Center')
+    
+            if Magnitude > Distance then continue end
 
-        local Character = Player.Character
-        local Humanoid = Character and Character:FindFirstChild('Humanoid')
-
-        if (not Humanoid) then continue end
-
-        local IsVisibleOnViewport = Camera:WorldToViewportPoint(Character.PrimaryPart.Position)
-
-        if ( IsVisibleOnViewport) then continue end
-
-            if Ascend.Camlock.Main.Enabled then
-                local Distance = Get_Distance(Character.PrimaryPart, 'Center')
-                if (Distance < CamlockRange) then continue end
-
-                ClosestPlayer = Character[Ascend.Camlock.Main.HitPart]
-                ClosestDistance = Distance
-                print("done!")
-            elseif Ascend.Silent.Main.Enabled then
-                local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
-
-                if (Distance < SilentRange) then continue end
-
-                ClosestPlayer = Character[Ascend.Silent.Main.HitPart]
-                ClosestDistance = Distance
-            elseif KillbotToggled then
-                local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
-
-                if (Distance < SilentRange) then continue end
-
-                ClosestPlayer = Character[Ascend.Silent.Main.HitPart]
-                ClosestDistance = Distance
-            else
-                return nil
+            if OnScreen then
+                Distance = Magnitude
+                Player = Character[Ascend.Camlock.Main.HitPart]
             end
-    end
+        elseif Ascend.Silent.Main.Enabled then
+            local Magnitude = Get_Distance(Character.PrimaryPart, 'Mouse')
+    
+            if Magnitude > Distance then continue end
 
-    return ClosestPlayer
+            if OnScreen then
+                Distance = Magnitude
+                Player = Character[Ascend.Silent.Main.HitPart]
+            end
+        else
+            print('none')
+            return nil
+        end
+    end
+ 
+    return Player
 end
 
 --// Searches for tool
@@ -757,15 +755,17 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += 1--CrosshairSpeed
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Position = UDim2.new(Target.Position)
 
-                        local Tool = ReturnTool()
-                        if Tool then
-                            Tool:Activate()
-                        end
-
                         RunService.RenderStepped:Wait()
                         
                         game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 
+                    end
+                end
+                if Target ~= nil then
+                    local Tool = ReturnTool()
+
+                    if Tool then
+                        Tool:Activate()
                     end
                 end
             end
