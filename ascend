@@ -44,7 +44,7 @@ local PingBased = Ascend.Camlock.Main.Prediction.PingBased
 local CamlockRange = Ascend.Camlock.Main.Range
 local SilentRange = Ascend.Silent.Main.Range
 local NotificationsToggled = Ascend.Notifications.Enabled
-local ResolverType = Ascend.Resolver.Enabled
+local ResolverToggled = Ascend.Resolver.Enabled
 local KillbotToggled = Ascend['Target Strafe'].Orbit.Enabled or Ascend['Target Strafe'].Random.Enabled
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character
@@ -68,11 +68,11 @@ local EasingDirection = {
 }
 
 RunService.Heartbeat:Connect(function()
-    if (not getgenv().Ascend.Camlock.Main.Enabled) then return end
+    if (not Ascend.Camlock.Main.Enabled) then return end
         if (Target == nil) then return end
         
-        local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Camlock.Main.Prediction.Horizontal
-        local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Camlock.Main.Prediction.Vertical
+        local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * Ascend.Camlock.Main.Prediction.Horizontal
+        local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * Ascend.Camlock.Main.Prediction.Vertical
         local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
         local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
 
@@ -81,22 +81,22 @@ RunService.Heartbeat:Connect(function()
             Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
         end
        
-        if (getgenv().Ascend.Camlock.Smoothing.Enabled) then
-            Camera.CFrame = Camera.CFrame:Lerp(Main, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
-        elseif (getgenv().Ascend.Camlock.Shake.Enabled) then
-            local Shake = Main + Vector3.new(math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power), math.random(-getgenv().Ascend.Shake.Power, getgenv().Ascend.Shake.Power))
-            Camera.CFrame = Camera.CFrame:Lerp(Shake, getgenv().Ascend.Smoothing.Power, Enum.EasingStyle[getgenv().Ascend.Smoothing.Style], Enum.EasingDirection[getgenv().Ascend.Smoothing.Direction])
+        if (Ascend.Camlock.Smoothing.Enabled) then
+            Camera.CFrame = Camera.CFrame:Lerp(Main, Ascend.Camlock.Smoothing.Power, Enum.EasingStyle[Ascend.Camlock.Smoothing.Style], Enum.EasingDirection[Ascend.Camlock.Smoothing.Direction])
+        elseif (Ascend.Camlock.Shake.Enabled) then
+            local Shake = Main + Vector3.new(math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount), math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount), math.random(-Ascend.Camlock.Shake.Amount, Ascend.Camlock.Shake.Amount))
+            Camera.CFrame = Camera.CFrame:Lerp(Shake, Ascend.Camlock.Smoothing.Power, Enum.EasingStyle[Ascend.Camlock.Smoothing.Style], Enum.EasingDirection[Ascend.Camlock.Smoothing.Direction])
         end
 
-        if (getgenv().Ascend.Resolver.Enabled) and (getgenv().Ascend.Resolver.Type == 'MoveDirection') then
-            Camera.CFrame = CFrame.lookat(Camera.CFrame.Position, Target.Parent.Humanoid * 19.64285714289 * getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
-        elseif (getgenv().Ascend.Resolver.Enabled) and (getgenv().Ascend.Resolver.Type == 'Ignore Velocity (Y)') then
+        if (Ascend.Resolver.Enabled) and (Ascend.Resolver.Type == 'MoveDirection') then
+            Camera.CFrame = CFrame.lookat(Camera.CFrame.Position, Target.Parent.Humanoid * 19.64285714289 * Ascend.Camlock.Main.Prediction.Horizontal)
+        elseif (Ascend.Resolver.Enabled) and (Ascend.Resolver.Type == 'Ignore Velocity (Y)') then
             VerticalPrediction *= 0
             local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
             Camera.CFrame = Main
         end
 
-        if (not getgenv().Ascend.Camlock.Smoothing.Enabled and getgenv().ascend.Camlock.Shake.Enabled and getgenv().Ascend.Resolver.Enabled) then
+        if (not Ascend.Camlock.Smoothing.Enabled and Ascend.Camlock.Shake.Enabled and Ascend.Resolver.Enabled) then
             Camera.CFrame = Main
         end
     end
@@ -110,10 +110,10 @@ setreadonly(MT, false)
 MT.__namecall = newcclosure(function(...)
     local Arguments, Method = {...}, getnamecallmethod()
 
-    if (not checkcaller() and ((getgenv().Ascend.Silent.Main.Enabled) or (getgenv().Ascend.Killbot.Enabled)) and (Target) and (Method == 'FireServer') and (Arguments[2] == 'UpdateMousePos')) then
+    if (not checkcaller() and Ascend.Silent.Main.Enabled or KillbotToggled and Target and Method == 'FireServer' and Arguments[2] == 'UpdateMousePos') then
 
-    local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * getgenv().Ascend.Silent.Main.Prediction.Horizontal
-    local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * getgenv().Ascend.Silent.Main.Prediction.Vertical
+    local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * Ascend.Silent.Main.Prediction.Horizontal
+    local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * Ascend.Silent.Main.Prediction.Vertical
     local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
 
     Arguments[3] = TargetPos
@@ -170,26 +170,26 @@ local function FindNearestEnemy()
 
         if (not IsVisibleOnViewport) then continue end
 
-            if getgenv().Ascend.Camlock.Main.Enabled then
+            if Ascend.Camlock.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Center')
                     
                 if (not Distance < CamlockRange) then continue end
 
-                ClosestPlayer = Character[getgenv().Ascend.Camlock.Main.HitPart]
+                ClosestPlayer = Character[Ascend.Camlock.Main.HitPart]
                 ClosestDistance = Distance
-            elseif getgenv().Ascend.Silent.Main.Enabled then
+            elseif Ascend.Silent.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
 
                 if (not Distance < SilentRange) then continue end
 
-                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
+                ClosestPlayer = Character[Ascend.Silent.Main.HitPart]
                 ClosestDistance = Distance
-            elseif getgenv().Ascend.Killbot.Enabled then
+            elseif KillbotToggled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
 
                 if (not Distance < SilentRange) then continue end
 
-                ClosestPlayer = Character[getgenv().Ascend.Silent.Main.HitPart]
+                ClosestPlayer = Character[Ascend.Silent.Main.HitPart]
                 ClosestDistance = Distance
             else
                 return nil
@@ -201,7 +201,7 @@ end
 
 --// Searches for tool
 local function ReturnTool()
-    if (Character) and (Character:FindFirstChildWhichIsA("Tool")) then 
+    if (Character and Character:FindFirstChildWhichIsA("Tool")) then 
         return Character:FindFirstChildWhichIsA("Tool") or nil 
     end
 end
@@ -401,17 +401,17 @@ Categories.LegitCategory1.new_label({
 local Camlock = Categories.LegitCategory1.new_toggle({
     text = 'Camlock', 
     callback = function(Toggle)
-        getgenv().Ascend.Camlock.Main.Enabled = not getgenv().Ascend.Camlock.Main.Enabled
+        Ascend.Camlock.Main.Enabled = not Ascend.Camlock.Main.Enabled
     end
 })
 
-Camlock:update_value(getgenv().Ascend.Camlock.Main.Enabled)
+Camlock:update_value(Ascend.Camlock.Main.Enabled)
 
 local CamlockKeybind = Categories.LegitCategory1.new_keybind({
     text = 'Keybind', 
-    keybind = getgenv().Ascend.Camlock.Main.Keybind,
+    keybind = Ascend.Camlock.Main.Keybind,
     callback = function() 
-        if getgenv().Ascend.Camlock.Main.Enabled then
+        if Ascend.Camlock.Main.Enabled then
             Locked = not Locked
             if Locked then
                 Target = FindNearestEnemy()
@@ -426,7 +426,7 @@ local CamlockHitPart = Categories.LegitCategory1.new_dropdown({
     text = 'HitPart',
     default_selection = 'HumanoidRootPart', 
     callback = function(Selection)
-        getgenv().Ascend.Camlock.Main.HitPart = Selection
+        Ascend.Camlock.Main.HitPart = Selection
     end
 })
 local Success, Error = pcall(function()
@@ -440,12 +440,12 @@ if not Success and Error then warn(Error) end
 
 local CamlockRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
-    default_value = getgenv().Ascend.Camlock.Main.Range, -- optional
+    default_value = Ascend.Camlock.Main.Range,
     min_value = 0, 
     max_value = 999, 
     allow_decimals = true, 
     callback = function(Value)
-        getgenv().Ascend.Camlock.Main.Range = Value
+        Ascend.Camlock.Main.Range = Value
     end
 })
 
@@ -457,15 +457,15 @@ Categories.LegitCategory1.new_label({
 local Silent = Categories.LegitCategory1.new_toggle({
     text = 'Silent Aim', 
     callback = function()
-        getgenv().Ascend.Silent.Main.Enabled = not getgenv().Ascend.Silent.Main.Enabled
+        Ascend.Silent.Main.Enabled = not Ascend.Silent.Main.Enabled
     end
 })
 
 local SilentKeybind = Categories.LegitCategory1.new_keybind({
     text = 'Keybind', 
-    keybind = getgenv().Ascend.Silent.Main.Keybind,
+    keybind = Ascend.Silent.Main.Keybind,
     callback = function() 
-        if getgenv().Ascend.Silent.Main.Enabled then
+        if Ascend.Silent.Main.Enabled then
             Locked = not Locked
             if Locked then
                 Target = FindNearestEnemy()
@@ -480,7 +480,7 @@ local SilentHitPart = Categories.LegitCategory1.new_dropdown({
     text = 'HitPart',
     default_selection = 'HumanoidRootPart', 
     callback = function(Selection)
-        getgenv().Ascend.Silent.Main.HitPart = Selection
+        Ascend.Silent.Main.HitPart = Selection
     end
 })
 
@@ -488,12 +488,12 @@ if not Success and Error then warn(Error) end
 
 local SilentRange = Categories.LegitCategory1.new_slider({
     text = 'Range', 
-    default_value = getgenv().Ascend.Silent.Main.Range,
+    default_value = Ascend.Silent.Main.Range,
     min_value = 0, 
     max_value = 999, 
     allow_decimals = true, 
     callback = function(Value)
-        getgenv().Ascend.Silent.Main.Range = Value
+        Ascend.Silent.Main.Range = Value
     end
 })
 
@@ -515,12 +515,12 @@ Categories.LegitCategory1.new_label({
 local PredictMovement = Categories.LegitCategory1.new_toggle({
     text = 'Predict Movement', 
     callback = function(Value)
-        getgenv().Ascend.Silent.Main.Prediction.Enabled = Value
-        getgenv().Ascend.Camlock.Main.Prediction.Enabled = Value
+        Silent.Main.Prediction.Enabled = Value
+        Camlock.Main.Prediction.Enabled = Value
     end
 })
 
-PredictMovement:update_value(getgenv().Ascend.Silent.Main.Prediction.Enabled)
+PredictMovement:update_value(Ascend.Silent.Main.Prediction.Enabled)
 
 local AutoPrediction = Categories.LegitCategory1.new_toggle({
     text = 'Ping Based', 
@@ -572,26 +572,26 @@ local HorizontalPrediction = Categories.LegitCategory1.new_textbox({
     text = 'Horizontal', 
     placeholder_text = '?',
     callback = function(Value)
-        getgenv().Ascend.Camlock.Main.Prediction.Horizontal = Value
+        Ascend.Camlock.Main.Prediction.Horizontal = Value
     end
 })
 
-HorizontalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Horizontal)
+HorizontalPrediction:update(Ascend.Camlock.Main.Prediction.Horizontal)
 
 local VerticalPrediction = Categories.LegitCategory1.new_textbox({
     text = 'Vertical', 
     placeholder_text = '?',
     callback = function(Value)
-        getgenv().Ascend.Camlock.Main.Prediction.Horizontal = Value
+        Ascend.Camlock.Main.Prediction.Horizontal = Value
     end
 })
 
-VerticalPrediction:update(getgenv().Ascend.Camlock.Main.Prediction.Vertical)
+VerticalPrediction:update(Ascend.Camlock.Main.Prediction.Vertical)
 
-AutoPredictionToggled = getgenv().Ascend.Camlock.Main.Prediction.Auto
+AutoPredictionToggled = Ascend.Camlock.Main.Prediction.Auto
 
 
-AutoPrediction:update_value(getgenv().Ascend.Silent.Main.Prediction.Auto)
+AutoPrediction:update_value(Ascend.Silent.Main.Prediction.Auto)
 print(AutoPrediction:get_value())
 
 --// Smoothness Section
@@ -602,28 +602,28 @@ Categories.LegitCategory2.new_label({
 local Smoothing = Categories.LegitCategory2.new_toggle({
     text = 'Enabled', 
     callback = function(Value)
-        getgenv().Ascend.Smoothing.Enabled = Value
+        Ascend.Camlock.Smoothing.Enabled = Value
     end
 })
 
-Smoothing:update_value(getgenv().Ascend.Smoothing.Enabled)
+Smoothing:update_value(Ascend.Camlock.Smoothing.Enabled)
 
 local SmoothingPower = Categories.LegitCategory2.new_slider({
     text = 'Smoothing Power', 
-    default_value = getgenv().Ascend.Smoothing.Power,
+    default_value = Ascend.Camlock.Smoothing.Amount,
     min_value = 0, 
     max_value = 1, 
     allow_decimals = true, 
     callback = function(value)
-        getgenv().Ascend.Smoothing.Power = math.abs(value)
+        Ascend.Camlock.Smoothing.Amount = math.abs(value)
     end
 })
 
 local SmoothingStyle = Categories.LegitCategory2.new_dropdown({
     text = 'Styles', 
-    default_selection = getgenv().Ascend.Smoothing.Style,
+    default_selection = Ascend.Camlock.Smoothing.Style,
     callback = function(selection)
-        getgenv().Ascend.Smoothing.Style = selection:sub(4, 99)
+        Ascend.Camlock.Smoothing.Style = selection:sub(4, 99)
     end
 })
 local Success, Error = pcall(function()
@@ -636,9 +636,9 @@ if not Success and Error then warn(Error) end
 
 local SmoothingDirection = Categories.LegitCategory2.new_dropdown({
     text = 'Direction', 
-    default_selection = getgenv().Ascend.Smoothing.Direction,
+    default_selection = Ascend.Camlock.Smoothing.Direction,
     callback = function(selection)
-        getgenv().Ascend.Smoothing.Direction = selection:sub(4, 99)
+        Ascend.Camlock.Smoothing.Direction = selection:sub(4, 99)
     end
 })
 local Success, Error = pcall(function()
@@ -656,20 +656,20 @@ Categories.LegitCategory2.new_label({
 local Shake = Categories.LegitCategory2.new_toggle({
     text = 'Enabled', 
     callback = function(Value)
-        getgenv().Ascend.Shake.Enabled = Value
+        Ascend.Camlock.Shake.Enabled = Value
     end
 })
 
-Shake:update_value(getgenv().Ascend.Shake.Enabled)
+Shake:update_value(Ascend.Camlock.Shake.Enabled)
 
 local ShakePower = Categories.LegitCategory2.new_slider({
     text = 'Shake Power', 
-    default_value = getgenv().Ascend.Shake.Power,
+    default_value = Ascend.Camlock.Shake.Amount,
     min_value = 0, 
     max_value = 10, 
     allow_decimals = true, 
     callback = function(value)
-        getgenv().Ascend.Shake.Power = value
+        Ascend.Camlock.Shake.Amount = value
     end
 })
 
@@ -683,13 +683,13 @@ local Notifications = Categories.LegitCategory2.new_toggle({
         NotificationsToggled = Value
     end
 })
-Notifications:update_value(getgenv().Ascend.Notifications.Enabled)
+Notifications:update_value(Ascend.Notifications.Enabled)
 
 local NotificationType = Categories.LegitCategory2.new_dropdown({
     text = 'Type', 
-    default_selection = getgenv().Ascend.Notifications.Type,
+    default_selection = Ascend.Notifications.Type,
     callback = function(selection)
-        getgenv().Ascend.Notifications.Type = selection
+        Ascend.Notifications.Type = selection
     end
 })
 NotificationType:add_option('Encrypt')
@@ -709,9 +709,9 @@ local Resolver = Categories.LegitCategory2.new_toggle({
 
 local ResolverType = Categories.LegitCategory2.new_dropdown({
     text = 'Type', 
-    default_selection = getgenv().Ascend.Resolver.Type,
+    default_selection = Ascend.Resolver.Type,
     callback = function(selection)
-        getgenv().Ascend.Resolver.Type = selection
+        Ascend.Resolver.Type = selection
     end
 })
 
@@ -726,7 +726,7 @@ Categories.RageCategory1.new_label({
 local Killbot = Categories.RageCategory1.new_toggle({
     text = 'Enabled', 
     callback = function(Value)
-        getgenv().Ascend.Killbot.Enabled = Value
+        KillbotToggled = Value
     end
 })
 
@@ -738,7 +738,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
         if KillbotToggled then
             Target = FindNearestEnemy()
             while Killbot:get_value() == true do
-                for x = 0, 360, (2 * math.pi) do task.wait(getgenv().Ascend.Killbot.Speed / 100)
+                for x = 0, 360, (2 * math.pi) do task.wait(Ascend['Target Strafe'].Orbit.Speed / 100)
                     if Target ~= nil then
                         local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
    
@@ -748,13 +748,13 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
 
                         local Facing = CFrame.lookAt(Orbit.CFrame.Position, Target.CFrame.Position)
 
-                        local NewCF = Target.CFrame + ((Orient.LookVector * getgenv().Ascend.Killbot.Distance) + Vector3.new(0, getgenv().Ascend.Killbot.Height, 0))
+                        local NewCF = Target.CFrame + ((Orient.LookVector * Ascend['Target Strafe'].Orbit.Distance) + Vector3.new(0, Ascend['Target Strafe'].Orbit.Height, 0))
 
                         Orbit.CFrame = NewCF * CFrame.Angles(0, math.rad(x), 0)
 
                         Camera.CameraSubject = Target.Parent.Humanoid
 
-                        LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += CrosshairSpeed
+                        LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation += 1--CrosshairSpeed
                         LocalPlayer.PlayerGui.MainScreenGui.Aim.Position = UDim2.new(Target.Position)
 
                         local Tool = ReturnTool()
@@ -780,30 +780,30 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
 
 local KillbotSpeed = Categories.RageCategory1.new_textbox({
     text = 'Speed', 
-    placeholder_text = getgenv().Ascend.Killbot.Speed,
+    placeholder_text = Ascend['Target Strafe'].Orbit.Speed,
     callback = function(text)
-        getgenv().Ascend.Killbot.Speed = text
+        Ascend['Target Strafe'].Orbit.Speed = text
     end
 })
-KillbotSpeed:update(getgenv().Ascend.Killbot.Speed)
+KillbotSpeed:update(Ascend['Target Strafe'].Orbit.Speed)
 
 local KillbotDistance = Categories.RageCategory1.new_textbox({
     text = 'Distance', 
-    placeholder_text = getgenv().Ascend.Killbot.Distance,
+    placeholder_text = Ascend['Target Strafe'].Orbit.Distance,
     callback = function(text)
-        getgenv().Ascend.Killbot.Distance = text
+        Ascend['Target Strafe'].Orbit.Distance = text
     end
 })
-KillbotDistance:update(getgenv().Ascend.Killbot.Distance)
+KillbotDistance:update(Ascend['Target Strafe'].Orbit.Distance)
 
 local KillbotHeight = Categories.RageCategory1.new_textbox({
     text = 'Height', 
-    placeholder_text = getgenv().Ascend.Killbot.Height,
+    placeholder_text = Ascend['Target Strafe'].Orbit.Height,
     callback = function(text)
-        getgenv().Ascend.Killbot.Height = text
+        Ascend['Target Strafe'].Orbit.Height = text
     end
 })
-KillbotHeight:update(getgenv().Ascend.Killbot.Height)
+KillbotHeight:update(Ascend['Target Strafe'].Orbit.Height)
 
 Categories.RageCategory2.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">CFrame</font></b>'
