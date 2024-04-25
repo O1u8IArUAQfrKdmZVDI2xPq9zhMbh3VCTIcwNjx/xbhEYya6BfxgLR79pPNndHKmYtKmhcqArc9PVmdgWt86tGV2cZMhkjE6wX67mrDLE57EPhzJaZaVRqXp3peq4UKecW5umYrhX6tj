@@ -172,7 +172,7 @@ local function FindNearestEnemy()
 
             if Ascend.Camlock.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Center')
-                    
+                print(Distance)
                 if (Distance < CamlockRange) then continue end
 
                 ClosestPlayer = Character[Ascend.Camlock.Main.HitPart]
