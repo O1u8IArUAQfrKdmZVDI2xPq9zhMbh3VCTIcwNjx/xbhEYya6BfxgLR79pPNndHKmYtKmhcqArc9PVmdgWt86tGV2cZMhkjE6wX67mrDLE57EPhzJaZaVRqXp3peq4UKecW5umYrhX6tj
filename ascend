@@ -96,7 +96,7 @@ RunService.Heartbeat:Connect(function()
             Camera.CFrame = Main
         end
 
-        if (not Ascend.Camlock.Smoothing.Enabled and Ascend.Camlock.Shake.Enabled and Ascend.Resolver.Enabled) then
+        if (not Ascend.Camlock.Smoothing.Enabled and not Ascend.Camlock.Shake.Enabled and not Ascend.Resolver.Enabled) then
             Camera.CFrame = Main
         end
     end
@@ -164,19 +164,19 @@ local function FindNearestEnemy()
         local Character = Player.Character
         local Humanoid = Character and Character:FindFirstChild('Humanoid')
 
-        if (not Humanoid) and (Humanoid.Health > 0) then continue end
+        if (not Humanoid) then continue end
 
         local IsVisibleOnViewport = Camera:WorldToViewportPoint(Character.PrimaryPart.Position)
 
-        if (not IsVisibleOnViewport) then continue end
+        if ( IsVisibleOnViewport) then continue end
 
             if Ascend.Camlock.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Center')
-                print(Distance)
                 if (Distance < CamlockRange) then continue end
 
                 ClosestPlayer = Character[Ascend.Camlock.Main.HitPart]
                 ClosestDistance = Distance
+                print("done!")
             elseif Ascend.Silent.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
 
