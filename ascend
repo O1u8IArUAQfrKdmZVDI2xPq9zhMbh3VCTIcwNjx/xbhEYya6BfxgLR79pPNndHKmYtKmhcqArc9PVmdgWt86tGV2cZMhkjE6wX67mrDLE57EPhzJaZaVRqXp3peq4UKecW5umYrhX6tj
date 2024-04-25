@@ -134,7 +134,12 @@ local function Get_Distance(Object, Method)
     if (not IsVisibleOnViewport) then return end
 
     if Method == "Center" then
-        local Distance = (Character.PrimaryPart.Position - Object.Position).Magnitude
+        local CenterPosition =
+            Vector2.new(
+            game:GetService("GuiService"):GetScreenResolution().X / 2,
+            game:GetService("GuiService"):GetScreenResolution().Y / 2
+        )
+        local Distance = (CenterPosition - Vector2.new(Object.Position.X, Object.Position.Y)).Magnitude
         return Distance
     elseif Method == "Mouse" then
         local Mouse = LocalPlayer:GetMouse()
@@ -150,11 +155,6 @@ end
 local function FindNearestEnemy()
     local ClosestDistance, ClosestPlayer = math.huge
     local Mouse = LocalPlayer:GetMouse()
-    local CenterPosition =
-        Vector2.new(
-        game:GetService("GuiService"):GetScreenResolution().X / 2,
-        game:GetService("GuiService"):GetScreenResolution().Y / 2
-    )
     CamlockRange = Ascend.Camlock.Main.Range
     SilentRange = Ascend.Silent.Main.Range
 
