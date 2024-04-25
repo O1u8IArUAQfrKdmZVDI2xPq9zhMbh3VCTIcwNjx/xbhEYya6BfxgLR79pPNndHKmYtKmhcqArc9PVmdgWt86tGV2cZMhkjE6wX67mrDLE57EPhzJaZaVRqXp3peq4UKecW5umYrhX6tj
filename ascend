@@ -173,21 +173,21 @@ local function FindNearestEnemy()
             if Ascend.Camlock.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Center')
                     
-                if (not Distance < CamlockRange) then continue end
+                if (Distance < CamlockRange) then continue end
 
                 ClosestPlayer = Character[Ascend.Camlock.Main.HitPart]
                 ClosestDistance = Distance
             elseif Ascend.Silent.Main.Enabled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
 
-                if (not Distance < SilentRange) then continue end
+                if (Distance < SilentRange) then continue end
 
                 ClosestPlayer = Character[Ascend.Silent.Main.HitPart]
                 ClosestDistance = Distance
             elseif KillbotToggled then
                 local Distance = Get_Distance(Character.PrimaryPart, 'Mouse')
 
-                if (not Distance < SilentRange) then continue end
+                if (Distance < SilentRange) then continue end
 
                 ClosestPlayer = Character[Ascend.Silent.Main.HitPart]
                 ClosestDistance = Distance
