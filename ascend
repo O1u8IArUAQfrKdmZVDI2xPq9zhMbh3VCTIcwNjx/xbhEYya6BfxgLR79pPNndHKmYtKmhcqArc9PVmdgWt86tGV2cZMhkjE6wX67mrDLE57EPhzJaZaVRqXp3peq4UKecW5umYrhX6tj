@@ -75,10 +75,12 @@ RunService.RenderStepped:Connect(function()
         local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * Ascend.Camlock.Main.Prediction.Vertical
         local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
         local Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
-
-        if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-            VerticalPrediction *= 0.5
-            Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+        if Ascend.Camlock.Main.AntiGroundShot then
+            if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+                VerticalPrediction *= 0.5
+                Main = CFrame.lookAt(Camera.CFrame.Position, TargetPos)
+                return
+            end
         end
        
         if (Ascend.Camlock.Smoothing.Enabled) then
@@ -110,10 +112,15 @@ setreadonly(MT, false)
 MT.__namecall = newcclosure(function(...)
     local Arguments, Method = {...}, getnamecallmethod()
 
-    if (not checkcaller() and Ascend.Silent.Main.Enabled or KillbotToggled and Target ~= nil and Method == 'FireServer' and Arguments[2] == 'UpdateMousePos') then
+    if (Ascend.Silent.Main.Enabled and Target ~= nil or KillbotToggled and Target ~= nil and Method == 'FireServer' and Arguments[2] == 'UpdateMousePos') then
 
     local HorizontalPrediction = Vector3.new(Target.AssemblyLinearVelocity.X, 0, Target.AssemblyLinearVelocity.Z) * Ascend.Silent.Main.Prediction.Horizontal
     local VerticalPrediction = Vector3.new(0, Target.AssemblyLinearVelocity.Y, 0) * Ascend.Silent.Main.Prediction.Vertical
+    if Ascend.Camlock.Main.AntiGroundShot then
+        if Target.Parent.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+            VerticalPrediction *= 0.5
+        end
+    end
     local TargetPos = Target.Position + HorizontalPrediction + VerticalPrediction
 
     Arguments[3] = TargetPos
@@ -165,28 +172,30 @@ local function FindNearestEnemy()
             game:GetService("GuiService"):GetScreenResolution().X / 2,
             game:GetService("GuiService"):GetScreenResolution().Y / 2
         )
- 
+        local Mouse = LocalPlayer:GetMouse()
+
         if (not RootPart) then continue end
  
         local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
 
         if Ascend.Camlock.Main.Enabled then
-            local Magnitude = Get_Distance(Character.PrimaryPart, 'Center')
+            --local Magnitude = Get_Distance(Character.PrimaryPart, 'Center')
+            local Magnitude = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
     
             if Magnitude > Distance then continue end
 
             if OnScreen then
                 Distance = Magnitude
-                Player = Character[Ascend.Camlock.Main.HitPart]
+                Player = RootPart
             end
         elseif Ascend.Silent.Main.Enabled then
-            local Magnitude = Get_Distance(Character.PrimaryPart, 'Mouse')
+            local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Position)).Magnitude
     
             if Magnitude > Distance then continue end
 
             if OnScreen then
                 Distance = Magnitude
-                Player = Character[Ascend.Silent.Main.HitPart]
+                Player = RootPart
             end
         else
             print('none')
@@ -312,6 +321,7 @@ EncryptLibrary.colors = {
     categories = Color3.fromRGB(10, 10, 10), 
     topbar = Color3.fromRGB(10, 10, 10), 
 }
+
 EncryptLibrary.fonts = {
 	main = 'Gotham',
 	secondary = 'GothamBold',
@@ -382,19 +392,20 @@ local Categories = {
 
 --// Display User Information
 local UserInformation = {
-    Username = Categories.HomeCategory1.new_label({text = string.format('<b>Username:</b> %s', LocalPlayer.Name)}).alignment('center'),
-    UserId = Categories.HomeCategory1.new_label({text = string.format('<b>UserId:</b> %s', LocalPlayer.UserId)}).alignment('center'),
-    WhitelistStatus = Categories.HomeCategory1.new_label({text = string.format("<b>Whitelist Status:</b> %s", tostring(EncryptWhitelist.plr_is_whitelisted()))}).alignment('center'),
+    Username = Categories.HomeCategory1.new_label({text = string.format('<b>Username:</b> %s', LocalPlayer.Name)}).Align('center'),
+    UserId = Categories.HomeCategory1.new_label({text = string.format('<b>UserId:</b> %s', LocalPlayer.UserId)}).Align('center'),
+    WhitelistStatus = Categories.HomeCategory1.new_label({text = string.format("<b>Whitelist Status:</b> %s", tostring(EncryptWhitelist.plr_is_whitelisted()))}).Align('center'),
 }
 
 --// Display Credits
 local Credits = {
-    Developer = Categories.HomeCategory2.new_label({text = string.format('<b>Developer:</b> vurelix')}).alignment('center'),
+    Developer = Categories.HomeCategory2.new_label({text = string.format('<b>Developer:</b> vurelix')}),
 }
+Credits.Align('center')
 --// Camlock Section
 Categories.LegitCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Camlock</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local Camlock = Categories.LegitCategory1.new_toggle({
     text = 'Camlock', 
@@ -403,7 +414,7 @@ local Camlock = Categories.LegitCategory1.new_toggle({
     end
 })
 
-Camlock:update_value(Ascend.Camlock.Main.Enabled)
+Camlock:UpdateValue(Ascend.Camlock.Main.Enabled)
 
 local CamlockKeybind = Categories.LegitCategory1.new_keybind({
     text = 'Keybind', 
@@ -430,7 +441,7 @@ local CamlockHitPart = Categories.LegitCategory1.new_dropdown({
 local Success, Error = pcall(function()
     for _, v in ipairs(Character:GetChildren()) do
         if v:IsA("BasePart") then
-            CamlockHitPart:add_option(tostring(v))
+            CamlockHitPart:AddOption(tostring(v))
         end
     end
 end)
@@ -450,7 +461,7 @@ local CamlockRange = Categories.LegitCategory1.new_slider({
 -- // Silent Aim Section
 Categories.LegitCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Silent Aim</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local Silent = Categories.LegitCategory1.new_toggle({
     text = 'Silent Aim', 
@@ -508,7 +519,7 @@ if not Success and Error then warn(Error) end
 -- // Prediction Section
 Categories.LegitCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Prediction Settings</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local PredictMovement = Categories.LegitCategory1.new_toggle({
     text = 'Predict Movement', 
@@ -574,7 +585,7 @@ local HorizontalPrediction = Categories.LegitCategory1.new_textbox({
     end
 })
 
-HorizontalPrediction:update(Ascend.Camlock.Main.Prediction.Horizontal)
+HorizontalPrediction:Update(Ascend.Camlock.Main.Prediction.Horizontal)
 
 local VerticalPrediction = Categories.LegitCategory1.new_textbox({
     text = 'Vertical', 
@@ -584,18 +595,18 @@ local VerticalPrediction = Categories.LegitCategory1.new_textbox({
     end
 })
 
-VerticalPrediction:update(Ascend.Camlock.Main.Prediction.Vertical)
+VerticalPrediction:Update(Ascend.Camlock.Main.Prediction.Vertical)
 
 AutoPredictionToggled = Ascend.Camlock.Main.Prediction.Auto
 
 
-AutoPrediction:update_value(Ascend.Silent.Main.Prediction.Auto)
-print(AutoPrediction:get_value())
+AutoPrediction:UpdateValue(Ascend.Silent.Main.Prediction.Auto)
+print(AutoPrediction:GetValue())
 
 --// Smoothness Section
 Categories.LegitCategory2.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Smoothing</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local Smoothing = Categories.LegitCategory2.new_toggle({
     text = 'Enabled', 
@@ -604,7 +615,7 @@ local Smoothing = Categories.LegitCategory2.new_toggle({
     end
 })
 
-Smoothing:update_value(Ascend.Camlock.Smoothing.Enabled)
+Smoothing:UpdateValue(Ascend.Camlock.Smoothing.Enabled)
 
 local SmoothingPower = Categories.LegitCategory2.new_slider({
     text = 'Smoothing Power', 
@@ -658,7 +669,7 @@ local Shake = Categories.LegitCategory2.new_toggle({
     end
 })
 
-Shake:update_value(Ascend.Camlock.Shake.Enabled)
+Shake:UpdateValue(Ascend.Camlock.Shake.Enabled)
 
 local ShakePower = Categories.LegitCategory2.new_slider({
     text = 'Shake Power', 
@@ -673,7 +684,7 @@ local ShakePower = Categories.LegitCategory2.new_slider({
 
 Categories.LegitCategory2.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Notifications</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local Notifications = Categories.LegitCategory2.new_toggle({
     text = 'Enabled', 
@@ -681,7 +692,7 @@ local Notifications = Categories.LegitCategory2.new_toggle({
         NotificationsToggled = Value
     end
 })
-Notifications:update_value(Ascend.Notifications.Enabled)
+Notifications:UpdateValue(Ascend.Notifications.Enabled)
 
 local NotificationType = Categories.LegitCategory2.new_dropdown({
     text = 'Type', 
@@ -690,13 +701,13 @@ local NotificationType = Categories.LegitCategory2.new_dropdown({
         Ascend.Notifications.Type = selection
     end
 })
-NotificationType:add_option('Encrypt')
-NotificationType:add_option('Akali')
-NotificationType:add_option('Roblox')
+NotificationType:AddOption('Encrypt')
+NotificationType:AddOption('Akali')
+NotificationType:AddOption('Roblox')
 
 Categories.LegitCategory2.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Resolver</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local Resolver = Categories.LegitCategory2.new_toggle({
     text = 'Enabled', 
@@ -713,13 +724,13 @@ local ResolverType = Categories.LegitCategory2.new_dropdown({
     end
 })
 
-ResolverType:add_option('MoveDirection')
-ResolverType:add_option('Recalculate Velocity')
-ResolverType:add_option('Ignore Velocity (Y)')
+ResolverType:AddOption('MoveDirection')
+ResolverType:AddOption('Recalculate Velocity')
+ResolverType:AddOption('Ignore Velocity (Y)')
 
 Categories.RageCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Killbot</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local Killbot = Categories.RageCategory1.new_toggle({
     text = 'Enabled', 
@@ -735,7 +746,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
         KillbotToggled = not KillbotToggled
         if KillbotToggled then
             Target = FindNearestEnemy()
-            while Killbot:get_value() == true do
+            while Killbot:GetValue() == true do
                 for x = 0, 360, (2 * math.pi) do task.wait(Ascend['Target Strafe'].Orbit.Speed / 100)
                     if Target ~= nil then
                         local Orbit = game.Players.LocalPlayer.Character.HumanoidRootPart
@@ -769,7 +780,7 @@ local KillbotKeybind = Categories.RageCategory1.new_keybind({
                     end
                 end
             end
-        elseif not KillbotToggled or not Killbot:get_value() then
+        elseif not KillbotToggled or not Killbot:GetValue() then
             Target = nil
             LocalPlayer.PlayerGui.MainScreenGui.Aim.Rotation = 0
             game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -785,7 +796,7 @@ local KillbotSpeed = Categories.RageCategory1.new_textbox({
         Ascend['Target Strafe'].Orbit.Speed = text
     end
 })
-KillbotSpeed:update(Ascend['Target Strafe'].Orbit.Speed)
+KillbotSpeed:Update(Ascend['Target Strafe'].Orbit.Speed)
 
 local KillbotDistance = Categories.RageCategory1.new_textbox({
     text = 'Distance', 
@@ -794,7 +805,7 @@ local KillbotDistance = Categories.RageCategory1.new_textbox({
         Ascend['Target Strafe'].Orbit.Distance = text
     end
 })
-KillbotDistance:update(Ascend['Target Strafe'].Orbit.Distance)
+KillbotDistance:Update(Ascend['Target Strafe'].Orbit.Distance)
 
 local KillbotHeight = Categories.RageCategory1.new_textbox({
     text = 'Height', 
@@ -803,15 +814,15 @@ local KillbotHeight = Categories.RageCategory1.new_textbox({
         Ascend['Target Strafe'].Orbit.Height = text
     end
 })
-KillbotHeight:update(Ascend['Target Strafe'].Orbit.Height)
+KillbotHeight:Update(Ascend['Target Strafe'].Orbit.Height)
 
 Categories.RageCategory2.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">CFrame</font></b>'
-}).alignment('center')
+}).Align('center')
 
 Categories.RenderCategory1.new_label({ 
     text = '<b><font color="rgb(255, 255, 255)">Box</font></b>'
-}).alignment('center')
+}).Align('center')
 
 local BoxEnabled = Categories.RenderCategory1.new_toggle({
     text = 'Enabled', 
@@ -867,7 +878,9 @@ local EditCrosshairSpeed = Categories.RenderCategory1.new_textbox({
         CrosshairSpeed = text
     end
 })
-EditCrosshairSpeed:update(CrosshairSpeed)
+
+
+
 
 local Loaded = tick()
 local ScriptLoaded = Loaded - Loading
